@@ -1,16 +1,71 @@
 {
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
-		{
-			"path": "pages/index/index",
-			"style": {
-				"navigationBarTitleText": "uni-app"
-			}
-		}
-	],
-	"globalStyle": {
-		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
-		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
-	}
+  "easycom": {
+    "^u-(.*)": "uview-ui/components/u-$1/u-$1.vue"
+  },
+  "pages": [
+    //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/classify/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/bookrack/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/set/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "uni-app",
+    "navigationBarBackgroundColor": "#fff",
+    "backgroundColor": "#fff"
+  },
+  "tabBar": {
+    "color": "#ccc",
+    "selectedColor": "#000",
+    "borderStyle": "#ccc",
+    "backgroundColor": "#fff",
+    "iconWidth": "20px",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "iconPath": "static/image/tabBar/home.png",
+        "selectedIconPath": "static/image/tabBar/home_active.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/classify/index",
+        "iconPath": "static/image/tabBar/classify.png",
+        "selectedIconPath": "static/image/tabBar/classify_active.png",
+        "text": "分类"
+      },
+      {
+        "pagePath": "pages/bookrack/index",
+        "iconPath": "static/image/tabBar/bookrack.png",
+        "selectedIconPath": "static/image/tabBar/bookrack_active.png",
+        "text": "书架"
+      },
+      {
+        "pagePath": "pages/set/index",
+        "iconPath": "static/image/tabBar/set.png",
+        "selectedIconPath": "static/image/tabBar/set_active.png",
+        "text": "设置"
+      }
+    ]
+  }
 }
