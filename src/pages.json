@@ -7,7 +7,6 @@
     {
       "path": "pages/home/index",
       "style": {
-        "navigationStyle": "custom"
       }
     },
     {
@@ -19,19 +18,17 @@
     {
       "path": "pages/bookrack/index",
       "style": {
-        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/set/index",
       "style": {
-        "navigationStyle": "custom"
       }
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "uni-app",
+    "navigationBarTitleText": "collect",
     "navigationBarBackgroundColor": "#fff",
     "backgroundColor": "#fff"
   },
