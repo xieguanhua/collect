@@ -30,6 +30,7 @@
 
 <script>
 import classifyData from './classify.data'
+import {crawl} from "../../api/crawl";
 
 
 
@@ -59,7 +60,7 @@ export default {
     },
     getData(){
     const page = this.classifyList[this.tabActive]
-      console.log(page)
+      crawl(page)
     }
   },
   computed: {

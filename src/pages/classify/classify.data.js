@@ -1,8 +1,16 @@
-export default [
+const defaultUrlKey = 'url'
+const urlFormat = require('url')
+const querystring = require("querystring");
+const list =[
     {
         type: '漫画',
         name: '布卡漫画',
-        pageUrl: 'http://m.buka.cn'
+        pageUrl: 'http://m.buka.cn',
+        proxyUrl:'http://localhost:3000',
+        proxyUrlKey:defaultUrlKey,
+        proxyParams:{
+
+        }
     },
     {
         type: '漫画',
@@ -45,3 +53,16 @@ export default [
         name: '好看的'
     }
 ]
+
+// #ifndef APP-PLUS
+list.forEach(v=>{
+    if(v.proxyUrl){
+        if(!v.proxyParams)v.proxyParams={}
+        v.proxyParams[v.proxyUrlKey||defaultUrlKey] = v.proxyUrl
+    const params = querystring.stringify(v.proxyParams)
+        v.pageUrl = `${v.proxyUrl}?${params}`
+        console.log(v.pageUrl)
+    }
+})
+// #endif
+export default list
