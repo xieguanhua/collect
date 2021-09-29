@@ -49,8 +49,31 @@ export default class Request {
             },
             response(res, config) {
                 try {
-                    return Promise.resolve(res)
+                    const {statusCode, data} = res
+                    if (statusCode !== 200) {
+                        let msg = data.message
+                        if (!msg) {
+                            if (statusCode === 400) {
+                                // 400 错误码处理
+                                msg = `请求出错，请稍后重试`
+                            } else {
+                                const code = String(statusCode).substr(0, 1)
+                                const errorTxt = {
+                                    '0': `网络异常，请检查网络连接`,
+                                    '4': `请求出错，请稍后重试`,
+                                    '5': `服务器异常，请稍后重试`,
+                                }
+                                msg = errorTxt[code] || `未知异常`
+                            }
+                        }
+                        const err = new Error(msg)
+                        err.data = data
+                        return Promise.reject(err)
+                    } else {
+                        return Promise.resolve(res)
+                    }
                 } catch (e) {
+                    e.message = `网络异常，请检查网络连接`
                     return Promise.reject(e)
                 }
             }
@@ -141,12 +164,12 @@ export default class Request {
      * @param {Object} config 配置参数 request方法的config
      * @param {Boolean} config.inherit 当请求没有配置config，继承当前方法的config
      */
-    async requestAll(requests = [], config={}) {
+    async requestAll(requests = [], config = {}) {
         this.showLoading(config)
         try {
             return await Promise.all(requests.map(v => {
-                if(!v.config){
-                    v.config = config.inherit?config:{}
+                if (!v.config) {
+                    v.config = config.inherit ? config : {}
                 }
                 v.config.showLoading = false
                 return this.request(v)

@@ -1,6 +1,6 @@
 const defaultUrlKey = 'url'
-const urlFormat = require('url')
 const querystring = require("querystring");
+
 const list =[
     {
         type: '漫画',
@@ -58,10 +58,10 @@ const list =[
 list.forEach(v=>{
     if(v.proxyUrl){
         if(!v.proxyParams)v.proxyParams={}
-        v.proxyParams[v.proxyUrlKey||defaultUrlKey] = v.proxyUrl
-    const params = querystring.stringify(v.proxyParams)
+        v.proxyParams[v.proxyUrlKey||defaultUrlKey] = v.pageUrl
+        const params = querystring.stringify(v.proxyParams)
+        console.log(params)
         v.pageUrl = `${v.proxyUrl}?${params}`
-        console.log(v.pageUrl)
     }
 })
 // #endif
