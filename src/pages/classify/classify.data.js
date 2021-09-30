@@ -5,10 +5,15 @@ const list =[
     {
         type: '漫画',
         name: '布卡漫画',
-        pageUrl: 'http://m.buka.cn',
+        pageUrl: 'http://localhost:3000?url=http://beta.neobai.com/',
+        pageUrlNextClass:'.nextbtn',
+        classifyUrl:'http://www.buka.cn/category.html',
+        classIfyClassName:'.category-title',
+        classIfyMoreBtn:'.more-btn',
+        classIfyNextClass:'.nextbtn',
         proxyUrl:'http://localhost:3000',
         proxyUrlKey:defaultUrlKey,
-        proxyParams:{
+        params:{
 
         }
     },
@@ -55,14 +60,5 @@ const list =[
 ]
 
 // #ifndef APP-PLUS
-list.forEach(v=>{
-    if(v.proxyUrl){
-        if(!v.proxyParams)v.proxyParams={}
-        v.proxyParams[v.proxyUrlKey||defaultUrlKey] = v.pageUrl
-        const params = querystring.stringify(v.proxyParams)
-        console.log(params)
-        v.pageUrl = `${v.proxyUrl}?${params}`
-    }
-})
 // #endif
 export default list
