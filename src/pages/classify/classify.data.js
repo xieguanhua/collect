@@ -1,21 +1,23 @@
-const defaultUrlKey = 'url'
-const querystring = require("querystring");
-
-const list =[
+const pageReg = `$pageNumber$`
+const list = [
     {
         type: '漫画',
-        name: '布卡漫画',
-        pageUrl: 'http://localhost:3000?url=http://beta.neobai.com/',
-        pageUrlNextClass:'.nextbtn',
-        classifyUrl:'http://www.buka.cn/category.html',
-        classIfyClassName:'.category-title',
-        classIfyMoreBtn:'.more-btn',
-        classIfyNextClass:'.nextbtn',
-        proxyUrl:'http://localhost:3000',
-        proxyUrlKey:defaultUrlKey,
-        params:{
-
-        }
+        name: '快看漫画',
+        pageUrl: 'http://192.168.3.32:3000/',
+        params: {
+            url:`https://www.kuaikanmanhua.com/tag/0?page=${pageReg}`,
+            classIfyTags:'.theme .selList .selListItem【%href|innerText%】',
+            list:{
+                cls:'.ItemSpecial',
+                cover:'.imgCover .img【%attr@$@data-src%】',//使用jquery获取dom属性,attr,text等等
+                title:'.itemTitle【%innerText%】',
+                link:'.itemLink【%href%】',
+                remark:'.itemFooter .author【%innerText%】'
+                // link:'.itemLink【%javascript:return "adad"%】',//高级功能可执行js
+                // reg:'【%(.*)%】'//不传则取params.reg
+            },
+            reg:'【%(.*)%】'
+        },
     },
     {
         type: '漫画',
@@ -53,12 +55,5 @@ const list =[
         type: '音乐',
         name: 'qq音乐'
     },
-    {
-        type: '',
-        name: '好看的'
-    }
 ]
-
-// #ifndef APP-PLUS
-// #endif
 export default list

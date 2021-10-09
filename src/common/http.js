@@ -48,8 +48,8 @@ export default class Request {
                 }
             },
             response(res, config) {
+                const {statusCode, data} = res
                 try {
-                    const {statusCode, data} = res
                     if (statusCode !== 200) {
                         let msg = data.message
                         if (!msg) {
@@ -70,7 +70,7 @@ export default class Request {
                         err.data = data
                         return Promise.reject(err)
                     } else {
-                        return Promise.resolve(res)
+                        return Promise.resolve(data)
                     }
                 } catch (e) {
                     e.message = `网络异常，请检查网络连接`
