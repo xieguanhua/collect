@@ -14,7 +14,7 @@
 		<view class="menu-wrap">
 			<scroll-view scroll-y scroll-with-animation class="tab-view">
 				<view v-for="(item,index) in classifyList" :key="index" class="tab-item"
-					:class="{'tab-item-active':tabActive === index}" @tap.stop="tabActive =index">
+					:class="{'tab-item-active':tabActive === index}" @tap.stop="toggleTab(index)">
 					<text class="u-line-1">{{ item.name }}</text>
 				</view>
 			</scroll-view>
@@ -121,18 +121,27 @@
         this.goTop()
         this.pageNumber=1
         this.loading = true
+        const {pageUrl,classIfy} = this.activeTab
+        let classIfyTags=  this.classIfyTags
+       if(!classIfyTags.length){
+         try {
+           const {tags} = await crawl(pageUrl, classIfy)
+           classIfyTags =tags||[]
+         }catch (e){
+           console.error(e)
+         }
+       }
         try {
-          const {pageUrl} = this.activeTab
           const params= this.theCrawlpParams
-          const {list,classIfyTags} = await crawl(pageUrl, params)
-          this.classIfyTags = classIfyTags||[]
+          params.pageNumber = this.pageNumber
+          const {list} = await crawl(pageUrl, params)
           this.workList = list||[]
         }catch (e){
           this.workList =[]
-          this.classIfyTags=[]
           this.bottomStatus ='nomore'
           console.error(e)
         }finally {
+          this.classIfyTags = classIfyTags
           this.loading = false;
           this.triggered = false;
         }
@@ -145,6 +154,7 @@
         const params = this.theCrawlpParams
         params.pageNumber = ++this.pageNumber
         const {list} = await crawl(pageUrl, params)
+        if(this.loading)return
         this.workList = [...this.workList, ...(list || [])]
         this.bottomStatus=list&&!list.length?'nomore':'loadmore'
       } catch (e) {
@@ -155,11 +165,17 @@
 			change(index) {
 				this.current = index;
 			},
+      toggleTab(index){
+        if(this.loading || this.bottomStatus ==='loading') return
+        this.tabActive =index
+      }
 		},
     watch:{
       'activeTab.name':{
         handler(){
           this.tagActive=0
+          this.classIfyTags= []
+          this.workList= []
           this.$nextTick(()=>{
             this.triggered = true;
           })
@@ -177,9 +193,11 @@
         if(href){
           const parse = urlFormat.parse(href||"")
          const hrefQuery= Qs.parse(parse.query)
+          console.log({...hrefQuery,...parseQuery})
           parse.search= `?${Qs.stringify({...hrefQuery,...parseQuery})}`
           url= urlFormat.format(parse)
         }
+        console.log(url)
         return {...params,url}
       },
       activeTab(){
