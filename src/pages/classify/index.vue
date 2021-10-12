@@ -43,13 +43,20 @@
           <view class="work-main">
 						<view class="work-item" v-for="(item,i) in workList" :key="i">
 							<view class="work-cover">
-								<image :src="item.cover" :lazy-load="true" mode="aspectFill"></image>
+								<u-image
+                    :src="item.cover"
+                    :lazy-load="true"
+                    border-radius="6rpx"
+                    mode="aspectFill"
+                    height="260rpx"
+                    width="100%">
+                </u-image>
 							</view>
 							<view class="work-title">{{item.title}}</view>
 							<view class="work-remark">{{item.remark}}</view>
 						</view>
 					</view>
-          <u-loadmore :status="bottomStatus" :load-text="loadText" class="loadmore" @loadmore="loadMore" v-if="!loading"/>
+          <u-loadmore :status="bottomStatus" :load-text="loadText" class="loadmore" @loadmore="loadMore" v-if="!loading && workList.length"/>
 				</scroll-view>
 			</view>
 
@@ -79,6 +86,8 @@
 	export default {
 		data() {
 			return {
+        tagRequestConfig:{},
+        listRequestConfig:{},
         scrollTop:0,
         //上拉加载
         loadText: {
@@ -108,10 +117,25 @@
       goTop() {
         this.scrollTop = 0
       },
-      toggleTag(i){
-        if(this.loading)return
+      abort(){
+       return new Promise(resolve => {
+         const {request: tagRequest} = this.tagRequestConfig
+         const {request: listRequest} = this.listRequestConfig
+         tagRequest && tagRequest.abort()
+         listRequest && listRequest.abort()
+         setTimeout(resolve,0)
+       })
+      },
+      async toggleTag(i){
+        if(this.tagActive===i)return
+        this.workList =[]
+        await this.abort()
+        this.loading= false
+        this.bottomStatus='loadmore'
         this.tagActive =i
-        this.triggered = true;
+        setTimeout(()=>{
+          this.triggered = true;
+        })
       },
       onRestore(){
         this.triggered = 'restore'; // 需要重置
@@ -122,39 +146,32 @@
         this.pageNumber=1
         this.loading = true
         const {pageUrl,classIfy} = this.activeTab
-        let classIfyTags=  this.classIfyTags
-       if(!classIfyTags.length){
-         try {
-           const {tags} = await crawl(pageUrl, classIfy)
-           classIfyTags =tags||[]
-         }catch (e){
-           console.error(e)
-         }
-       }
         try {
           const params= this.theCrawlpParams
           params.pageNumber = this.pageNumber
-          const {list} = await crawl(pageUrl, params)
+          const {tags} = await crawl(pageUrl, classIfy,this.tagRequestConfig)
+          const {list} = await crawl(pageUrl, params,this.listRequestConfig)
           this.workList = list||[]
+          this.classIfyTags = tags
         }catch (e){
-          this.workList =[]
-          this.bottomStatus ='nomore'
+          if(e.errMsg !== 'request:fail abort'){
+            this.workList =[]
+            this.bottomStatus ='nomore'
+          }
           console.error(e)
         }finally {
-          this.classIfyTags = classIfyTags
           this.loading = false;
           this.triggered = false;
         }
       },
     async loadMore(){
-      if(this.bottomStatus ==='loading' || this.loading)return
+      if(this.bottomStatus ==='loading' || this.loading ||  this.bottomStatus ==='nomore')return
       this.bottomStatus='loading'
       try {
         const {pageUrl} = this.activeTab
         const params = this.theCrawlpParams
         params.pageNumber = ++this.pageNumber
-        const {list} = await crawl(pageUrl, params)
-        if(this.loading)return
+        const {list} = await crawl(pageUrl, params,this.listRequestConfig)
         this.workList = [...this.workList, ...(list || [])]
         this.bottomStatus=list&&!list.length?'nomore':'loadmore'
       } catch (e) {
@@ -165,14 +182,16 @@
 			change(index) {
 				this.current = index;
 			},
-      toggleTab(index){
-        if(this.loading || this.bottomStatus ==='loading') return
-        this.tabActive =index
+     async toggleTab(index){
+       await this.abort()
+         this.tabActive = index
       }
 		},
     watch:{
       'activeTab.name':{
         handler(){
+          this.bottomStatus='loadmore'
+          this.loading =false
           this.tagActive=0
           this.classIfyTags= []
           this.workList= []
@@ -193,11 +212,9 @@
         if(href){
           const parse = urlFormat.parse(href||"")
          const hrefQuery= Qs.parse(parse.query)
-          console.log({...hrefQuery,...parseQuery})
           parse.search= `?${Qs.stringify({...hrefQuery,...parseQuery})}`
           url= urlFormat.format(parse)
         }
-        console.log(url)
         return {...params,url}
       },
       activeTab(){
@@ -350,13 +367,6 @@
 						margin: 1%;
 					}
 
-					.work-cover {
-						image {
-							width: 100%;
-							height: 260rpx;
-							border-radius: 6rpx;
-						}
-					}
 
 					.work-title {
 						font-size: 28rpx;
