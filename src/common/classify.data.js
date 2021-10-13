@@ -12,19 +12,31 @@ const list = [
                 title:'.itemTitle【@innerText@】',
                 link:'.itemLink【@href@】',
                 remark:'.itemFooter .author【@innerText@】',
-                data:{
+              /*  data:{
                     link:'.itemLink【@href@】',
                 }
                 // link:'.itemLink【@javascript:return "adad"@】',//高级功能可执行js
-                // reg:'【@(.*)@】'//不传则取params.reg
+                // reg:'【@(.*)@】'//不传则取params.reg*/
             },
-            reg:'【@(.*)@】'
         },
         classIfy:{
             url:`https://www.kuaikanmanhua.com/tag/0`,
             tags:'.theme .selList .selListItem【@href|innerText@】',
-            reg:'【@(.*)@】'
         },
+        detailsParams:{
+            url:``,
+            details:{
+                title:'.TopicHeader .title【@innerText@】',
+                author:'.TopicHeader .nickname【@innerText@】',
+                explain:'.TopicHeader .detailsBox【@innerText@】',
+            },
+            list:{
+                parentCls:'.TopicItem',
+                title:'.title【@innerText@】',
+                link:'.title a【@href@】',
+                filter:'attr(href)@=@javascript:void(0)'//只执行jquery
+            }
+        }
     },
     {
         type: '漫画',
@@ -34,14 +46,11 @@ const list = [
             url:`https://m.ac.qq.com/category/listAll/type/na/rank/pgv?page=${pageReg}&pageSize=15`,
             list:{
                 parentCls:'.comic-item',
-                cover:'.cover-image【@src@】',//使用jquery获取dom属性,attr,text等等
+                cover:'.cover-image【@src@】',
                 title:'.comic-title【@innerText@】',
                 link:'.comic-link【@href@】',
                 remark:'.comic-desc【@innerText@】',
-                // link:'.itemLink【@javascript:return "adad"@】',//高级功能可执行js
-                // reg:'【@(.*)@】'//不传则取params.reg
-            },
-            reg:'【@(.*)@】'
+            }
         },
         classIfy:{
             url:`https://m.ac.qq.com/category/index`,
@@ -49,41 +58,30 @@ const list = [
                 parentCls:'.category-normal-item',
                 href:'.item-link【@href@】',
                 innerText:'.item-link【@innerText@】'
-            },
-            reg:'【@(.*)@】'
+            }
         },
+        detailsParams:{
+            url:``,
+            details:{
+                title:'.head-title-tags h1【@innerText@】',
+                author:'.author-list .author-wr【@innerText@】',
+                explain:'.head-info-desc【@innerText@】',
+            },
+            list:{
+                parentCls:'.reverse .bottom-chapter-item',
+                title:'.comic-info【@innerText@】',
+                link:'.chapter-link【@href@】',
+                filter:'find(.comic-cover)@$@is(.lock)@=@true'
+            }
+        }
     },
     {
         type: '视频',
         name: '腾讯视频'
     },
     {
-        type: '视频',
-        name: '爱奇艺'
-    },
-    {
         type: '音乐',
         name: '网易云'
-    },
-    {
-        type: '音乐',
-        name: 'qq音乐'
-    },
-    {
-        type: '音乐',
-        name: 'qq音乐'
-    },
-    {
-        type: '音乐',
-        name: 'qq音乐'
-    },
-    {
-        type: '音乐',
-        name: 'qq音乐'
-    },
-    {
-        type: '音乐',
-        name: 'qq音乐'
-    },
+    }
 ]
 export default list

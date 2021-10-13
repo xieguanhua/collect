@@ -34,14 +34,13 @@
                      :refresher-triggered="triggered"
                      :refresher-threshold="60"
                      lower-threshold="80"
-                     @scroll="onscroll"
                      @refresherrefresh="onRefresh"
                      @refresherrestore="onRestore"
                      @scrolltolower="loadMore">
 <!--          refresher-default-style="none"
           <view slot="refresher">内容</view>-->
           <view class="work-main">
-						<view class="work-item" v-for="(item,i) in workList" :key="i">
+						<view class="work-item" v-for="(item,i) in workList" :key="i" @click="toDetails(item)">
 							<view class="work-cover">
 								<u-image
                     :src="item.cover"
@@ -66,7 +65,7 @@
 </template>
 
 <script>
-	import classifyData from './classify.data'
+	import classifyData from '@/common/classify.data'
 	import {
 		crawl
 	} from "@/api/crawl";
@@ -111,9 +110,6 @@
 			}
 		},
 		methods: {
-      onscroll({target:{scrollTop}}){
-        this.scrollTop = scrollTop;
-      },
       goTop() {
         this.scrollTop = 0
       },
@@ -123,7 +119,7 @@
          const {request: listRequest} = this.listRequestConfig
          tagRequest && tagRequest.abort()
          listRequest && listRequest.abort()
-         setTimeout(resolve,0)
+         setTimeout(resolve,80)
        })
       },
       async toggleTag(i){
@@ -156,8 +152,8 @@
         }catch (e){
           if(e.errMsg !== 'request:fail abort'){
             this.workList =[]
-            this.bottomStatus ='nomore'
           }
+          this.bottomStatus ='nomore'
           console.error(e)
         }finally {
           this.loading = false;
@@ -185,6 +181,14 @@
      async toggleTab(index){
        await this.abort()
          this.tabActive = index
+      },
+      toDetails(data){
+        const {name:typeName} = this.activeTab
+        const info = {...data,typeName}
+        uni.navigateTo({
+          url: `/pages/details/index?${Qs.stringify(info)}`,
+        });
+
       }
 		},
     watch:{
@@ -294,7 +298,7 @@
 				align-items: center;
 				justify-content: center;
 				font-size: 26rpx;
-				color: $uni-text-color-grey;
+				color: $uni-text-color-placeholder;
 				font-weight: 400;
 				line-height: 1;
 			}
@@ -304,7 +308,7 @@
 				position: relative;
 				font-size: 30rpx;
 				font-weight: 600;
-				background: #fff;
+				background: $uni-bg-color;
 
 				&::before {
 					content: "";
@@ -374,7 +378,7 @@
 
 					.work-remark {
 						font-size: 24rpx;
-						color: $uni-text-color-grey;
+						color: $uni-text-color-placeholder;
 					}
 
 					.work-title,

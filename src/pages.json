@@ -12,7 +12,10 @@
     {
       "path": "pages/classify/index",
       "style": {
-        "navigationStyle": "custom"
+        "navigationStyle": "custom",
+        "app-plus":{
+          "bounce":"none"
+        }
       }
     },
     {
@@ -24,19 +27,24 @@
       "path": "pages/set/index",
       "style": {
       }
+    },
+    {
+      "path": "pages/details/index",
+      "style" : {
+      }
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "collect",
-    "navigationBarBackgroundColor": "#fff",
-    "backgroundColor": "#fff"
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#ffffff"
   },
   "tabBar": {
     "color": "#ccc",
-    "selectedColor": "#000",
-    "borderStyle": "#ccc",
-    "backgroundColor": "#fff",
+    "selectedColor": "#000000",
+    "borderStyle": "#cccccc",
+    "backgroundColor": "#ffffff",
     "iconWidth": "20px",
     "list": [
       {
