@@ -94,7 +94,6 @@ export default {
         if(!isReverse){
           isReverse =v
         }else{
-          console.log(isReverse,v)
           isReverse = isReverse>v
           break
         }
