@@ -48,6 +48,11 @@
 			"sdkConfigs": { /* SDK配置 */
 
 			}
+		},
+		"safearea": {
+			"bottom": {
+				"offset": "none"
+			}
 		}
 	},
 	"quickapp": { /* 快应用特有相关 */

@@ -1,13 +1,14 @@
 <template>
 	<view class="classify">
-		<view class="navbar">
+<!--		<view class="navbar">
 			<view class="status-bar" :style="{height: statusBarHeight + 'px' }"></view>
-			<view class="navbar-inner" :style="{height: navbarHeight + 'px'}">
+			<view class="navbar-inner">
 				<u-icon name="plus" class="plus" size="44rpx"></u-icon>
 				<text class="title">分类</text>
-				<u-icon name="search" class="search" size="44rpx"></u-icon>
+				<u-icon name="search" class="search" size="44rpx" :style="{right:`${rightButtonWidth}px`}"></u-icon>
 			</view>
-		</view>
+		</view>-->
+    <navbar iconLeft="plus"  iconRight="search" title="分类" fixed/>
 		<view class="tabs u-border-bottom" v-show="list.length">
 			<u-tabs :list="list" :current="current" @change="change"></u-tabs>
 		</view>
@@ -35,7 +36,6 @@
                      :refresher-threshold="60"
                      lower-threshold="80"
                      @refresherrefresh="onRefresh"
-                     @refresherrestore="onRestore"
                      @scrolltolower="loadMore">
 <!--          refresher-default-style="none"
           <view slot="refresher">内容</view>-->
@@ -65,26 +65,24 @@
 </template>
 
 <script>
-	import classifyData from '@/common/classify.data'
 	import {
 		crawl
 	} from "@/api/crawl";
+  import navbar from '@/components/navbar'
   const urlFormat = require('url')
-
+  import {mapGetters} from 'vuex'
   const Qs = require('qs');
-
-
-	const classifyArr = classifyData.reduce((accumulator, item) => {
-		if (!item.type) {
-			item.type = '未定义'
-		}
-		accumulator[item.type] ? accumulator[item.type].push(item) : accumulator[item.type] = [item]
-		return accumulator;
-	}, {});
+  import {navigateTo} from '@/utils'
 	let systemInfo = uni.getSystemInfoSync();
+  let menuButtonInfo = {};
+  // 如果是小程序，获取右上角胶囊的尺寸信息，避免导航栏右侧内容与胶囊重叠(支付宝小程序非本API，尚未兼容)
+  // #ifdef MP-WEIXIN || MP-BAIDU || MP-TOUTIAO || MP-QQ
+  menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+  // #endif
 	export default {
 		data() {
 			return {
+        rightButtonWidth: 0,
         tagRequestConfig:{},
         listRequestConfig:{},
         scrollTop:0,
@@ -100,7 +98,6 @@
         triggered:false,
         loading:false,
 				statusBarHeight: systemInfo.statusBarHeight,
-				classifyArr,
 				tabActive: 0,
 				current: 0,
         //标签列表与选中
@@ -109,7 +106,15 @@
 				workList: []
 			}
 		},
-		methods: {
+    components:{
+      navbar
+    },
+    mounted() {
+      // #ifdef MP-WEIXIN || MP-BAIDU || MP-TOUTIAO || MP-QQ
+      this.rightButtonWidth = systemInfo.windowWidth - (menuButtonInfo.left||0)
+      // #endif
+    },
+    methods: {
       goTop() {
         this.scrollTop = 0
       },
@@ -119,25 +124,26 @@
          const {request: listRequest} = this.listRequestConfig
          tagRequest && tagRequest.abort()
          listRequest && listRequest.abort()
-         setTimeout(resolve,80)
+         setTimeout(resolve,200)
        })
       },
       async toggleTag(i){
         if(this.tagActive===i)return
         this.workList =[]
+        this.tagActive =i
         await this.abort()
         this.loading= false
         this.bottomStatus='loadmore'
-        this.tagActive =i
-        setTimeout(()=>{
-          this.triggered = true;
-        })
-      },
-      onRestore(){
-        this.triggered = 'restore'; // 需要重置
+         this.$nextTick(()=>{
+           this.triggered = !this.triggered;
+         })
       },
       async onRefresh(){
         if(this.loading)return
+        if(!this.triggered){
+        //界面下拉触发，triggered可能不是true，要设为true
+            this.triggered = true;
+        }
         this.goTop()
         this.pageNumber=1
         this.loading = true
@@ -179,34 +185,45 @@
 				this.current = index;
 			},
      async toggleTab(index){
-       await this.abort()
-         this.tabActive = index
+        if(this.tabActive===index) {
+          return
+        }
+        this.tabActive = index
       },
       toDetails(data){
-        const {name:typeName} = this.activeTab
-        const info = {...data,typeName}
-        uni.navigateTo({
-          url: `/pages/details/index?${Qs.stringify(info)}`,
-        });
-
+        const {guid} = this.activeTab
+        navigateTo(`/pages/details/index`,{...data,guid})
       }
 		},
     watch:{
       'activeTab.name':{
-        handler(){
+        async handler(){
+          await this.abort()
           this.bottomStatus='loadmore'
           this.loading =false
           this.tagActive=0
           this.classIfyTags= []
           this.workList= []
-          this.$nextTick(()=>{
-            this.triggered = true;
-          })
+         setTimeout(()=>{
+           this.triggered = true;
+         })
         },
         immediate:true
       }
     },
 		computed: {
+      ...mapGetters({
+        classifyArr: 'details/classifyArr',
+      }),
+      classifyData(){
+        return  this.classifyArr.reduce((accumulator, item) => {
+          if (!item.type) {
+            item.type = '未定义'
+          }
+          accumulator[item.type] ? accumulator[item.type].push(item) : accumulator[item.type] = [item]
+          return accumulator;
+        }, {});
+      },
       theCrawlpParams(){
         const  {params={}} = this.activeTab||{}
         let url = params.url||""
@@ -225,29 +242,18 @@
         return this.classifyList[this.tabActive]||{}
       },
 			classifyList() {
-				return (this.list[this.current] || {}).data || classifyData
+				return (this.list[this.current] || {}).data || this.classifyArr
 			},
 			list() {
-				const list = Object.keys(this.classifyArr).map(name => ({
+				const list = Object.keys(this.classifyData).map(name => ({
 					name,
-					data: this.classifyArr[name]
+					data: this.classifyData[name]
 				}))
 				list.length && list.unshift({
 					name: '全部',
-					data: classifyData
+					data: this.classifyArr
 				})
 				return list
-			},
-			navbarHeight() {
-				// #ifdef APP-PLUS || H5
-				return 44;
-				// #endif
-				// #ifdef MP
-				// 小程序特别处理，让导航栏高度 = 胶囊高度 + 两倍胶囊顶部与状态栏底部的距离之差(相当于同时获得了导航栏底部与胶囊底部的距离)
-				// 此方法有缺陷，暂不用(会导致少了几个px)，采用直接固定值的方式
-				// return menuButtonInfo.height + (menuButtonInfo.top - this.statusBarHeight) * 2;//导航高度
-				return systemInfo.platform === 'ios' ? 44 : 48;
-				// #endif
 			}
 		}
 	}
@@ -261,24 +267,7 @@
 		display: flex;
 		flex-direction: column;
 
-		.navbar-inner {
-			display: flex;
-			align-items: center;
 
-			.search,
-			.plus {
-				padding: 0 12px;
-				height: 100%;
-			}
-
-			.title {
-				flex: 1;
-				font-size: 32rpx;
-				text-align: center;
-				font-weight: bold;
-
-			}
-		}
 
 		.menu-wrap {
 			flex: 1;

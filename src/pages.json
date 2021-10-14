@@ -24,26 +24,28 @@
       }
     },
     {
-      "path": "pages/set/index",
-      "style": {
-      }
+      "path": "pages/set/index"
     },
     {
-      "path": "pages/details/index",
-      "style" : {
+      "path": "pages/details/index"
+    },
+    {
+      "path": "pages/preview/index",
+      "style": {
+        "navigationStyle": "custom"
       }
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "collect",
+    "navigationBarTitleText": "浏览器",
     "navigationBarBackgroundColor": "#ffffff",
     "backgroundColor": "#ffffff"
   },
   "tabBar": {
     "color": "#ccc",
     "selectedColor": "#000000",
-    "borderStyle": "#cccccc",
+    "borderStyle": "white",
     "backgroundColor": "#ffffff",
     "iconWidth": "20px",
     "list": [

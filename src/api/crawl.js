@@ -1,4 +1,4 @@
-import Http from '@/common/http'
+import Http from '@/utils/http'
 
 const service = new Http()
 export function crawl(pageUrl, params,config) {

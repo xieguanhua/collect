@@ -2,6 +2,7 @@
   <view>
 <!--        <web-view ref="webview" class="webview" @onPostMessage="handlePostMessage"  src="http://m.buka.cn"></web-view>-->
 <!--    <button class="button" @click="evalJs">evalJs(改变webview背景颜色)</button>-->
+<!--    <navbar left-icon="back"  title="导航栏组件"></navbar>-->
   </view>
 </template>
 

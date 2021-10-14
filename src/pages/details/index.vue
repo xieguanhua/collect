@@ -23,7 +23,7 @@
       <view class="operation">
         <view></view>
        <view>
-         <button class="read" type="primary" size="mini">开始阅读</button>
+         <button class="read" type="primary" size="mini" @click="startRead">开始阅读</button>
        </view>
       </view>
       <view class="explain">{{ option.explain }}</view>
@@ -31,24 +31,23 @@
 
     <view class="details-main">
       <view class="details-title">
-        <view class="total-section">{{ option.typeName }}，共有{{ list.length }}个章节</view>
+        <view class="total-section">{{ activeTab.name }}，共有{{ list.length }}个章节</view>
         <view class="sort">
-          <view :class="{active:sort}"  @click="clickSort(true)">
+          <view :class="{active:!orderBy}"  @click="setOrderBy(false)">
             正序
           </view>
           <view class="line">|</view>
-          <view :class="{active:!sort}" @click="clickSort(false)">
+          <view :class="{active:orderBy}" @click="setOrderBy(true)">
             反序
           </view>
         </view>
       </view>
-      <view class="details-list">
-        <view class="details-item" v-for="(item,i) in list" :key="i">
-          {{ item.title }}
-        </view>
-      </view>
+      <u-cell-group class="details-list" :border="false">
+        <u-cell-item @click="startRead(item)" icon="eye-fill" :title="item.title"  v-for="(item,i) in list" :key="i" :arrow="false" class="details-item" :border-bottom="false"></u-cell-item>
+      </u-cell-group>
 
     </view>
+<!--    <preview/>-->
   </view>
 </template>
 
@@ -56,38 +55,38 @@
 import {
   crawl
 } from "@/api/crawl";
-import classifyData from '@/common/classify.data'
+import {mapGetters,mapMutations} from 'vuex'
+import {navigateTo,getParams} from '@/utils'
 export default {
   name: "index",
   data() {
     return {
-      sort:true,
-      activeTab:{},
       option: {},
-      list:[]
+      reverseList:[]
     }
   },
-  onLoad(option) {
+  onLoad(data) {
+    let option = getParams(data);
     this.option = option
     uni.setNavigationBarTitle({
       title: option.title
     })
-
-   this.activeTab= classifyData.find(({name})=>name ===option.typeName)||{}
-    this.getDetail()
+   this.getDetail()
   },
   methods:{
-    clickSort(sort){
-      if(this.sort===sort)return
-      this.sort = sort
-      this.list.reverse()
+    ...mapMutations({
+      setOrderBy: 'details/setOrderBy'
+    }),
+    startRead(item){
+      const {guid} = this.option
+      navigateTo(`/pages/preview/index`,{...item,guid})
     },
-  async getDetail(){
+   async getDetail(){
       const {detailsParams,pageUrl} = this.activeTab
       detailsParams.url = this.option.link
-      const {list=[],details}=await crawl(pageUrl,detailsParams)
-     let isReverse=false
-     for (let i=0;i<list.length;i++){
+      const {list=[],details}=await crawl(pageUrl,detailsParams,{showLoading:true,loadingMask:true})
+      let isReverse=false
+      for (let i=0;i<list.length;i++){
        const {title=''} =list[i]||{}
       const v= parseInt(title.replace(/[^0-9]/ig, ''))
       if(!isNaN(v)){
@@ -97,10 +96,26 @@ export default {
           isReverse = isReverse>v
           break
         }
-      }
-     }
-      this.list = isReverse? list.reverse():list
+      }}
+     this.reverseList = isReverse? list.reverse():list
       this.option = {...this.option,...details}
+      uni.setStorageSync('details',{
+          ...this.option,
+          list:this.reverseList
+        });
+    }
+  },
+  computed:{
+    ...mapGetters({
+      orderBy: 'details/orderBy',
+      classifyArr: 'details/classifyArr'
+    }),
+    activeTab(){
+      return this.classifyArr.find(({guid})=>guid ===this.option.guid)||{}
+    },
+    list(){
+      const {reverseList,orderBy} = this
+      return orderBy?[...reverseList].reverse():reverseList
     }
   }
 }
@@ -171,6 +186,7 @@ export default {
     height:60rpx;
     line-height: 60rpx;
     position: sticky;
+    z-index: 10;
     top: 0;
     // #ifdef H5
     top: 44px;
@@ -188,13 +204,11 @@ export default {
       margin:0 10rpx;
     }
   }
-  .details-item{
-    height:80rpx;
-    line-height: 80rpx;
-    padding:0 30rpx;
-    color: $uni-text-color-grey;
-    border-bottom:1px solid $uni-border-color;
-    font-size: 24rpx;
+  .details-list{
+    /deep/ .u-cell{
+      padding: 12rpx 30rpx;
+      border-bottom:1px solid $uni-border-color;
+    }
   }
 }
 

@@ -1,5 +1,6 @@
+import {guid} from '@/utils'
 const pageReg = `pageNumberReg`
-const list = [
+const defaultList = [
     {
         type: '漫画',
         name: '快看漫画',
@@ -84,4 +85,19 @@ const list = [
         name: '网易云'
     }
 ]
-export default list
+
+
+//读取本地配置与默认配置合并去重，默认配置优先
+const storageList =uni.getStorageSync('config')||[]
+let list = [...defaultList,...storageList]
+const hash = {};
+const newList = list.reduce((item, next)=>{
+   if(!next.guid){
+      const {guid:guidText} = storageList.find(({name,type})=>name === next.name && type === next.type)||{}
+      next.guid = guidText ||guid()
+   }
+    hash[next.name] ? '' : hash[next.name] = true && item.push(next);
+    return item;
+},[])
+uni.setStorageSync('config',newList)
+export default newList
