@@ -135,6 +135,10 @@ export default {
     font-size: $uni-font-size-lg;
     font-weight: 700;
     /* #endif */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
 
   }
 }

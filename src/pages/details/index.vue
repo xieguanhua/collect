@@ -23,7 +23,7 @@
       <view class="operation">
         <view></view>
        <view>
-         <button class="read" type="primary" size="mini" @click="startRead">开始阅读</button>
+         <button class="read" type="primary" size="mini" @tap="startRead(list[0])">开始阅读</button>
        </view>
       </view>
       <view class="explain">{{ option.explain }}</view>
@@ -33,21 +33,19 @@
       <view class="details-title">
         <view class="total-section">{{ activeTab.name }}，共有{{ list.length }}个章节</view>
         <view class="sort">
-          <view :class="{active:!orderBy}"  @click="setOrderBy(false)">
+          <view :class="{active:!orderBy}"  @tap="setOrderBy(false)">
             正序
           </view>
           <view class="line">|</view>
-          <view :class="{active:orderBy}" @click="setOrderBy(true)">
+          <view :class="{active:orderBy}" @tap="setOrderBy(true)">
             反序
           </view>
         </view>
       </view>
       <u-cell-group class="details-list" :border="false">
-        <u-cell-item @click="startRead(item)" icon="eye-fill" :title="item.title"  v-for="(item,i) in list" :key="i" :arrow="false" class="details-item" :border-bottom="false"></u-cell-item>
+        <u-cell-item @tap="startRead(item)" icon="eye-fill" :title="item.title"  v-for="(item,i) in list" :key="i" :arrow="false" class="details-item" :border-bottom="false"></u-cell-item>
       </u-cell-group>
-
     </view>
-<!--    <preview/>-->
   </view>
 </template>
 
@@ -78,6 +76,7 @@ export default {
       setOrderBy: 'details/setOrderBy'
     }),
     startRead(item){
+      if(!item)return
       const {guid} = this.option
       navigateTo(`/pages/preview/index`,{...item,guid})
     },
@@ -99,7 +98,7 @@ export default {
       }}
      this.reverseList = isReverse? list.reverse():list
       this.option = {...this.option,...details}
-      uni.setStorageSync('details',{
+      uni.setStorageSync('detail',{
           ...this.option,
           list:this.reverseList
         });

@@ -1,13 +1,5 @@
 <template>
 	<view class="classify">
-<!--		<view class="navbar">
-			<view class="status-bar" :style="{height: statusBarHeight + 'px' }"></view>
-			<view class="navbar-inner">
-				<u-icon name="plus" class="plus" size="44rpx"></u-icon>
-				<text class="title">分类</text>
-				<u-icon name="search" class="search" size="44rpx" :style="{right:`${rightButtonWidth}px`}"></u-icon>
-			</view>
-		</view>-->
     <navbar iconLeft="plus"  iconRight="search" title="分类" fixed/>
 		<view class="tabs u-border-bottom" v-show="list.length">
 			<u-tabs :list="list" :current="current" @change="change"></u-tabs>
@@ -24,7 +16,7 @@
 				<scroll-view scroll-y scroll-with-animation class="tag-list-scroll" v-if="classIfyTags.length">
 					<view class="tag-list">
 						<view v-for="(item,i) in classIfyTags" class="tag" :class="{active:tagActive===i}" :key="i"
-							@click="toggleTag(i)">{{item.innerText}}</view>
+							@tap="toggleTag(i)">{{item.innerText}}</view>
 					</view>
 				</scroll-view>
 				<scroll-view scroll-y
@@ -40,7 +32,7 @@
 <!--          refresher-default-style="none"
           <view slot="refresher">内容</view>-->
           <view class="work-main">
-						<view class="work-item" v-for="(item,i) in workList" :key="i" @click="toDetails(item)">
+						<view class="work-item" v-for="(item,i) in workList" :key="i" @tap="toDetails(item)">
 							<view class="work-cover">
 								<u-image
                     :src="item.cover"

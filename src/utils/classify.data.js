@@ -4,7 +4,7 @@ const defaultList = [
     {
         type: '漫画',
         name: '快看漫画',
-        pageUrl: 'http://192.168.3.32:3000/',
+        pageUrl: 'http://localhost:3000/',
         params: {
             url:`https://www.kuaikanmanhua.com/tag/0?page=${pageReg}`,
             list:{
@@ -42,7 +42,7 @@ const defaultList = [
     {
         type: '漫画',
         name: '腾讯漫画',
-        pageUrl: 'http://192.168.3.32:3000/',
+        pageUrl: 'http://localhost:3000/',
         params: {
             url:`https://m.ac.qq.com/category/listAll/type/na/rank/pgv?page=${pageReg}&pageSize=15`,
             list:{

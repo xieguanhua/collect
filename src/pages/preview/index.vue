@@ -1,16 +1,40 @@
 <template>
   <view  class="preview">
-    dadad
+    <navbar :title="selectPreview.title" fixed immersive></navbar>
+    <view class="footer">
+      <view>
+        <view class="">
+          <view>
+            
+          </view>
+          <view></view>
+          <view></view>
+          <view></view>
+        </view>
+      </view>
+      <view class="safe-area"></view>
+    </view>
   </view>
 </template>
 
 <script>
 import {getParams} from '@/utils'
+import navbar from '@/components/navbar'
+
 export default {
   name: "preview",
+  data(){
+    return {
+      selectPreview:{},
+      detail:uni.getStorageSync('detail')
+    }
+  },
+  components:{
+    navbar
+  },
   onLoad(data) {
-    let option = getParams(data);
-    console.log(option)
+    this.selectPreview = getParams(data);
+    console.log(this.detail)
     // this.option = option
     // uni.setNavigationBarTitle({
     //   title: option.title
@@ -21,12 +45,17 @@ export default {
 </script>
 <style lang="scss" scoped>
 .preview{
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  //background: #000;
-  z-index: 1000;
+  .footer{
+    position: fixed;
+    bottom: 0;
+    background: $uni-bg-color;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    .safe-area{
+      height: env(safe-area-inset-bottom);
+      width: 100%;
+    }
+  }
 }
 </style>
