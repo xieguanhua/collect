@@ -37,6 +37,10 @@ const defaultList = [
                 link:'.title a【@href@】',
                 filter:'attr(href)@=@javascript:void(0)'//只执行jquery
             }
+        },
+        previewParams:{
+            url:``,
+            links:'.imgList .img【@attr@$@data-src@】'
         }
     },
     {
@@ -74,7 +78,12 @@ const defaultList = [
                 link:'.chapter-link【@href@】',
                 filter:'find(.comic-cover)@$@is(.lock)@=@true'
             }
+        },
+        previewParams:{
+            url:``,
+            links:'.comic-pic-item .comic-pic【@attr@$@data-src@】'
         }
+
     },
     {
         type: '视频',

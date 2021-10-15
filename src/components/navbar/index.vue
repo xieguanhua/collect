@@ -95,6 +95,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.navbar{
+  background: $uni-bg-color;
+}
 .fixed {
   position: fixed;
   z-index: 998;

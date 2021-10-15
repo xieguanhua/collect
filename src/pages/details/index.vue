@@ -97,6 +97,9 @@ export default {
         }
       }}
      this.reverseList = isReverse? list.reverse():list
+     this.reverseList.forEach(v=>{
+       v.title = v.title.replace(/[\r\n]/g, "");
+     })
       this.option = {...this.option,...details}
       uni.setStorageSync('detail',{
           ...this.option,
