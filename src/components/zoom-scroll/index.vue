@@ -297,7 +297,7 @@ export default {
 }
 
 .animation {
-  transition: .05s ease-in;
+  transition: .1s ease-in;
 }
 
 .touch-main {
