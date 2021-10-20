@@ -40,16 +40,8 @@ page, .page-body {
   height: 100%;
   overflow: hidden;
 }
-
-.scroll {
-  height: 100%;
-}
-
-.main {
-  height: 50px;
-  background: red;
-  transform-origin:left top;
-  width: 100%;
+.page-body{
+  font-size: 0;
 }
 
 </style>
