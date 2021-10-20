@@ -5,6 +5,7 @@
         @touchmove="touchmove"
         @touchend="touchend"
         :style="{transform:`translate(${-left}px,${-top}px) scale(${scale})`}"
+        :class="{animation:isAnimation}"
         class="touch-main">
       <slot></slot>
     </view>
@@ -15,6 +16,10 @@
 export default {
   name: "zoom-scroll",
   props: {
+    isZoom:{
+      type: Boolean,
+      default: true
+    },
     scrollY: {
       type: Boolean,
       default: true
@@ -49,10 +54,12 @@ export default {
   },
   data() {
     return {
+      isAnimation:false,
       top: 0,
       left: 0,
       scale: 1,
       isTouch: false,
+      box:null,
       lastMoveTime: 0,
       lastMoveStart: {
         y: 0,
@@ -66,6 +73,11 @@ export default {
     }
   },
   methods: {
+    getDistance(p1, p2) {
+      const x = p2.pageX - p1.pageX,
+          y = p2.pageY - p1.pageY;
+      return Math.sqrt((x * x) + (y * y));
+    },
     maxScrollPosition(move, maxMove, bounce = false) {
       const top = 0 //top值
       if (move < top) {
@@ -99,6 +111,16 @@ export default {
         return Math.abs(now.pageX - v.newPageX) <= num && Math.abs(now.pageY - v.newPageY) <= num
       })
       this.start.splice(index, 1)
+      if(this.isTouchZoom){
+        this.isTouchZoom = this.start.length >= 2
+        if(this.scale<=1){
+          this.isAnimation=true
+          this.scale =1
+          this.left =1
+          this.top =1
+        }
+        return
+      }
       if (this.start.length) return
       const {pageY: nowY, pageX: nowX} = now
       let {top, left} = this.startRect
@@ -183,14 +205,23 @@ export default {
     },
     async touchmove(e) {
       this.isTouch = true
-      this.start.forEach((v, i) => {
-        const {pageX, pageY} = e.touches[i] || {}
-        v.newPageX = pageX
-        v.newPageY = pageY
-      })
       const [p1, p2] = this.start
       const [now1, now2] = e.touches;  //得到第二组两个点
       const {pageY, pageX} = now1
+      //多指放大
+      if(this.isTouchZoom){
+        if(this.box && this.isZoom){
+          let scale = this.getDistance(now1, now2) / this.getDistance(p1, p2); //得到缩放比例，getDistance是勾股定理的一个方法
+          const { clientY, ratioT, height,ratioL,width,clientX,scale:boxScale} = this.box
+          scale = Number((boxScale * scale).toFixed(2))
+          const h = height * scale,w = width * scale
+          this.top =h * ratioT - clientY
+          this.left =w * ratioL - clientX
+          this.scale =  scale
+        }
+        return
+      }
+      //单指滚动
       let {top, left} = this.startRect
       top += (p1.pageY - pageY)
       left += (p1.pageX - pageX)
@@ -211,6 +242,8 @@ export default {
     },
     async touchstart(e) {
       e.preventDefault();
+      this.isAnimation=false
+      this.isTouchZoom= e.touches.length >= 2
       this.isTouch = true
       this.lastMoveTime = Date.now();
       const {top, left} = this
@@ -218,6 +251,26 @@ export default {
       const [p1, p2] = this.start = e.touches;
       const {pageX: x, pageY: y} = p1
       this.lastMoveStart = {y, x}
+    if(this.isTouchZoom && this.isZoom){
+      const {pageX,pageY} = p2||{}
+      const clientY = Math.max(pageY,y) - Math.abs(pageY - y)
+      const clientX = Math.max(pageX,x) - Math.abs(pageX -x)
+      const res = await this.getRect('.touch-main')
+      const height = Math.ceil(res.height / this.scale)
+      const width = Math.ceil(res.width / this.scale)
+
+      const ratioT = (clientY +this.top) / res.height,
+          ratioL = (clientX + this.left) / res.width
+      this.box = {
+        scale:this.scale,
+        ratioL,
+        clientY,
+        clientX,
+        ratioT,
+        height,
+        width
+      }
+    }
     }
   }
 }
@@ -227,8 +280,9 @@ export default {
 .zoom-scroll {
   overflow: hidden;
 }
-
-
+.animation{
+  transition: .1s;
+}
 .touch-main {
   font-size: 0;
   transform-origin: left top;
