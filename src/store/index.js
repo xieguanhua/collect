@@ -1,31 +1,15 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import classifyArr from '@/utils/classify.data'
-
-
+const context = require.context('./', true, /[^index].js/)
+const path = require("path");
+const server={}
+context.keys().forEach((key) => {
+    server[path.basename(key, path.extname(key))] = context(key).default
+})
 Vue.use(Vuex)
-const details = {
-    // 命名空间隔离
-    namespaced: true,
-    state: {
-        classifyArr,
-        orderBy:!!uni.getStorageSync('orderBy') //列表false正序true为反序
-    },
-    getters: {
-        classifyArr:state=>state.classifyArr,
-        orderBy:state=>state.orderBy
-    },
-    mutations: {
-        setOrderBy(state, status=false) {
-            state.orderBy = status
-            uni.setStorageSync('orderBy',status);
-        },
-    }
-}
-
 const store = new Vuex.Store({
     modules: {
-        details
+...server
     }
 })
 export default store

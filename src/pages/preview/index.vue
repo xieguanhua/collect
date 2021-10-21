@@ -127,7 +127,7 @@ export default {
 </script>
 <style lang="scss" scoped>
 .preview{
-  background: black;
+  background: #1F2123;
   height:100vh;
   .main-scroll{
     height: 100%;

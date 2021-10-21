@@ -16,26 +16,29 @@
 /* 颜色变量 */
 
 /* 行为相关颜色 */
-$uni-color-primary: #007aff;
-$uni-color-success: #4cd964;
-$uni-color-warning: #f0ad4e;
-$uni-color-error: #dd524d;
+$uni-color-primary: var(--primary,#007aff);
+$uni-color-success:  var(--success,#4cd964);
+$uni-color-warning: var(--warning,#f0ad4e);
+$uni-color-error:var(--error,#dd524d);
 
 /* 文字基本颜色 */
-$uni-text-color:#333;//基本色
-$uni-text-color-inverse:#fff;//反色
-$uni-text-color-grey:#5c5c5c;//辅助灰色，如加载更多的提示信息
-$uni-text-color-placeholder: #999;
-$uni-text-color-disable:#c0c0c0;
+$uni-text-color: var(--text-color,#000);//基本色
+$uni-text-color-inverse: var(--text-color-inverse,#fff);//反色
+$uni-text-color-grey: var(--text-color-grey,#5c5c5c);//辅助灰色，如加载更多的提示信息
+$uni-text-color-placeholder: var(--text-color-placeholder,#999);
+$uni-text-color-disable: var(--text-color-disable,#c0c0c0);
 
 /* 背景颜色 */
-$uni-bg-color:#ffffff;
-$uni-bg-color-grey:#fafafa;
-$uni-bg-color-hover:#f1f1f1;//点击状态颜色
+$uni-bg-color: var(--bg-color,#ffffff);
+$uni-bg-color-grey: var(--bg-color-grey,#fafafa);
+$uni-bg-color-hover: var(--bg-color-hover,#f1f1f1);
+$uni-bg-color-inverse:var(--bg-color-inverse,#000000);//背景反色
+$uni-text-color-bg:var(--text-color-bg,#ffffff);//文字颜色对应的黑白背景
+$uni-bg-color-text:var(--bg-color-text,#000000);//背景色颜色对应的文字黑白颜色
 $uni-bg-color-mask:rgba(0, 0, 0, 0.4);//遮罩颜色
 
 /* 边框颜色 */
-$uni-border-color:#ebebeb;
+$uni-border-color:var(--border-color,#ebebeb);
 
 /* 尺寸变量 */
 
