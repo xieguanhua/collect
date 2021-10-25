@@ -163,6 +163,10 @@ export default {
     .read{
       border-radius: 50px;
       vertical-align: middle;
+      background: $uni-color-primary;
+      &:after{
+        border: none;
+      }
     }
   }
   .explain{

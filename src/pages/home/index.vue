@@ -1,5 +1,5 @@
 <template>
-  <view class="page-body" :style="theme">
+  <view class="page-body">
 
   </view>
 </template>

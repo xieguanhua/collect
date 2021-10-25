@@ -3,7 +3,7 @@ export default {
     state:{
         mainColor:uni.getStorageSync('color') || {
             /* 行为相关颜色 */
-            primary:'#007aff',
+            primary:'#f0ad4e',
             success:'#4cd964',
             warning:'#f0ad4e',
             error:'#dd524d',

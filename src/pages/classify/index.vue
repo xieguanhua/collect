@@ -1,8 +1,8 @@
 <template>
-	<view class="classify" :style="theme">
+	<view class="classify">
     <navbar iconLeft="plus"  iconRight="search" title="分类" fixed/>
 		<view class="tabs u-border-bottom" v-show="list.length">
-			<u-tabs :list="list" :current="current" @change="change"></u-tabs>
+			<u-tabs :list="list" :current="current" @change="change"  :active-color="theme.primary"></u-tabs>
 		</view>
 		<view class="menu-wrap">
 			<scroll-view scroll-y scroll-with-animation class="tab-view">
@@ -259,8 +259,6 @@
 		display: flex;
 		flex-direction: column;
 
-
-
 		.menu-wrap {
 			flex: 1;
 			display: flex;
@@ -294,7 +292,7 @@
 				&::before {
 					content: "";
 					position: absolute;
-					border-left: 4px solid $u-type-primary;
+					border-left: 4px solid $uni-color-primary;
 					border-radius: 0 4px 4px 0;
 					height: 32rpx;
 					left: 0;
