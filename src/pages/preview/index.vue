@@ -1,21 +1,17 @@
 <template>
-  <view  class="preview">
-    <navbar :title="selectPreview.title" fixed immersive></navbar>
-
-
-
-    <scroll-view scroll-y scroll-with-animation class="main-scroll">
+  <view  class="preview"  :style="cssTheme">
+<!--    <navbar :title="selectPreview.title" fixed immersive></navbar>-->
+    <zoom-scroll @scrolltolower="scrolltolower">
         <view class="main">
            <u-image v-for="(item,i) in links"
                     :src="item"
                     :key="i"
-                    :lazy-load="true"
+                    lazy-load
                     mode="widthFix"
                     width="100%">
            </u-image>
         </view>
-    </scroll-view>
-
+    </zoom-scroll>
     <u-popup v-model="show" mode="right" safe-area-inset-bottom>
       <view class="popup-content">
         <view class="status-bar" :style="{height: statusBarHeight + 'px' }"></view>
@@ -31,7 +27,7 @@
         </scroll-view>
       </view>
     </u-popup>
-    <view class="footer">
+<!--    <view class="footer">
       <view class="features">
         <view class="features-list" @tap="show=true">
           <view class="iconfont icon-mulu"></view>
@@ -51,7 +47,7 @@
         </view>
       </view>
       <view class="safe-area"></view>
-    </view>
+    </view>-->
   </view>
 </template>
 
@@ -61,6 +57,7 @@ import {
 } from "@/api/crawl";
 import {getParams} from '@/utils'
 import navbar from '@/components/navbar'
+import zoomScroll from '@/components/zoom-scroll'
 import {mapGetters} from "vuex";
 const systemInfo = uni.getSystemInfoSync();
 let menuButtonInfo = {};
@@ -72,6 +69,7 @@ export default {
   name: "preview",
   data(){
     return {
+      activeLink:'',
       statusBarHeight: systemInfo.statusBarHeight+(menuButtonInfo.height||0),
       show:false,
       selectPreview:{},
@@ -80,7 +78,8 @@ export default {
     }
   },
   components:{
-    navbar
+    navbar,
+    zoomScroll
   },
   computed:{
     ...mapGetters({
@@ -88,39 +87,30 @@ export default {
     }),
     activeTab(){
       return this.classifyArr.find(({guid})=>guid ===this.detail.guid)||{}
-    }
+    },
+    activeDetails(){
+      return this.detail.list.find(v=>v.link===this.activeLink)||{}
+    },
   },
   onLoad(data) {
     this.selectPreview = getParams(data);
+    this.activeLink = this.selectPreview.link
     this.getDetail()
   },
   methods:{
+    scrolltolower(){
+      console.log(11)
+    },
     async getDetail(){
       const {pageUrl,previewParams}=this.activeTab
-      previewParams.url = this.selectPreview.link
-      const {links}=await crawl(pageUrl,previewParams)
-      this.links = links
-      /*const {detailsParams,pageUrl} = this.activeTab
-      detailsParams.url = this.option.link
-      const {list=[],details}=await crawl(pageUrl,detailsParams,{showLoading:true,loadingMask:true})
-      let isReverse=false
-      for (let i=0;i<list.length;i++){
-        const {title=''} =list[i]||{}
-        const v= parseInt(title.replace(/[^0-9]/ig, ''))
-        if(!isNaN(v)){
-          if(!isReverse){
-            isReverse =v
-          }else{
-            isReverse = isReverse>v
-            break
-          }
-        }}
-      this.reverseList = isReverse? list.reverse():list
-      this.option = {...this.option,...details}
-      uni.setStorageSync('detail',{
-        ...this.option,
-        list:this.reverseList
-      });*/
+      previewParams.url = this.activeLink
+      let {list} = this.activeDetails
+      if(!list){
+        const {links}=await crawl(pageUrl,previewParams)
+        this.activeDetails.list =links
+        list=links
+      }
+      this.links = [...this.links,...list]
     }
   }
 }
@@ -129,12 +119,8 @@ export default {
 .preview{
   background: #1F2123;
   height:100vh;
-  .main-scroll{
-    height: 100%;
-  }
   .main{
     /deep/ .u-image__image{
-      vertical-align: middle;
     }
   }
 }

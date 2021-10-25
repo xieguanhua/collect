@@ -1,5 +1,5 @@
 <template>
-  <view class="details">
+  <view class="details"  :style="cssTheme">
     <view class="info">
       <view class="info-detail">
         <view class="cover">

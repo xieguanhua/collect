@@ -8,9 +8,6 @@ module.exports = {
     onLaunch() {
         this.createColor()
     },
-    onShow() {
-        this.route && this.$nextTick(this.setTheme)
-    },
     computed: {
         ...mapGetters({
             themeMainColor: 'color/mainColor',
@@ -18,6 +15,15 @@ module.exports = {
         }),
         theme() {
             return {...this.themeMakeColor, ...this.themeMainColor}
+        },
+        cssTheme(){
+            let theme = ''
+            Object.keys(this.theme).forEach(v => {
+                //大写转划线
+                const k = `--${v.replace(/([A-Z])/g, "-$1").toLowerCase()}`
+                theme += `${k}:${this.theme[v]};`
+            })
+            return theme
         }
     },
     methods: {
@@ -41,15 +47,6 @@ module.exports = {
                 bgColorText: color(bgColor).isDark() ? white : black //文字颜色对应的文字颜色
             }
             this.setMakeColor(makeColor)
-        },
-        setTheme() {
-            let theme = ''
-            Object.keys(this.theme).forEach(v => {
-                //大写转划线
-                const k = `--${v.replace(/([A-Z])/g, "-$1").toLowerCase()}`
-                theme += `${k}:${this.theme[v]};`
-            })
-            this.$el.style.cssText = theme
         },
         // 查询节点信息
         // 目前此方法在支付宝小程序中无法获取组件跟接点的尺寸，为支付宝的bug(2020-07-21)

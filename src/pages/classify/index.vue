@@ -1,5 +1,5 @@
 <template>
-	<view class="classify">
+	<view class="classify" :style="cssTheme">
     <navbar iconLeft="plus"  iconRight="search" title="分类" fixed/>
 		<view class="tabs u-border-bottom" v-show="list.length">
 			<u-tabs :list="list" :current="current" @change="change"  :active-color="theme.primary"></u-tabs>

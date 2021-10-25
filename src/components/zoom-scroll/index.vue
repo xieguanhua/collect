@@ -1,10 +1,10 @@
 <template>
   <view class="zoom-scroll" :style="{height,width}">
     <view
-        @touchstart="touchstart"
-        @touchmove="touchmove"
-        @touchend="touchend"
-        :style="{transform:`translate(${-left}px,${-top}px) scale(${scale})`}"
+        @touchstart.stop.prevent="touchstart"
+        @touchmove.stop.prevent="touchmove"
+        @touchend.stop.prevent="touchend"
+        :style="{transform:`translate3d(${-left}px,${-top}px,1px) scale(${scale})`}"
         :class="{animation:isAnimation}"
         class="touch-main">
       <slot></slot>
@@ -15,6 +15,7 @@
 <script>
 export default {
   name: "zoom-scroll",
+  emits:['scrolltolower'],
   props: {
     isZoom: {
       type: Boolean,
@@ -50,6 +51,11 @@ export default {
     width: {
       type: String,
       default: '100%'
+    },
+    //距底部（单位px），触发 scrolltolower 事件
+    lowerThreshold:{
+      type: Number,
+      default: 300
     }
   },
   data() {
@@ -68,11 +74,24 @@ export default {
       startRect: {
         top: 0,
         left: 0
-      }
-
+      },
+      scrollData:{}
+    }
+  },
+  watch:{
+    top(e){
+      this.scrollTop(e)
     }
   },
   methods: {
+    scrollTop(e){
+      const {maxScrollTop} = this.scrollData
+      if(maxScrollTop-e<= this.lowerThreshold){
+        this.$u.throttle(()=>{
+          this.$emit('scrolltolower')
+        }, 2000,true)
+      }
+    },
     getDistance(p1, p2) {
       const x = p2.pageX - p1.pageX,
           y = p2.pageY - p1.pageY;
@@ -92,7 +111,7 @@ export default {
       const zoomScroll = await this.getRect('.zoom-scroll')
       const maxScrollTop = touchMain.height - zoomScroll.height
       const maxScrollLeft = touchMain.width - zoomScroll.width
-      return {
+      this.scrollData = {
         touchMain,
         zoomScroll,
         maxScrollTop,
@@ -100,6 +119,7 @@ export default {
         top: this.maxScrollPosition(top, maxScrollTop, bounceY),
         left: this.maxScrollPosition(left, maxScrollLeft, bounceX),
       }
+      return this.scrollData
     },
     async touchend(e) {
       this.isTouch = false
