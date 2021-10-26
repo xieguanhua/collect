@@ -1,18 +1,25 @@
 <template>
-  <view  class="preview"  :style="cssTheme">
-<!--    <navbar :title="selectPreview.title" fixed immersive></navbar>-->
-    <zoom-scroll @scrolltolower="scrolltolower">
+  <view  class="preview" :style="cssTheme">
+    <navbar :title="activeDetail.title" fixed immersive :class="{show:functionShow}" class="title"></navbar>
+    <zoom-scroll
+        @scrolltolower="scrolltolower"
+        @scroll="scroll"
+        :lowerThreshold="2000"
+        @touchTap="functionShow=!functionShow">
         <view class="main">
-           <u-image v-for="(item,i) in links"
-                    :src="item"
-                    :key="i"
-                    lazy-load
-                    mode="widthFix"
-                    width="100%">
-           </u-image>
+          <view class="comic-list" v-for="(item,i) in comicList" :key="i">
+            <u-image v-for="(l,k) in item.list"
+                     :src="l"
+                     :key="k"
+                     lazy-load
+                     mode="widthFix"
+                     width="100%">
+            </u-image>
+          </view>
+          <u-loadmore :status="bottomStatus" :load-text="loadText" class="loadmore" v-if="comicList.length"/>
         </view>
     </zoom-scroll>
-    <u-popup v-model="show" mode="right" safe-area-inset-bottom>
+    <u-popup v-model="showCatalog" mode="right" safe-area-inset-bottom>
       <view class="popup-content">
         <view class="status-bar" :style="{height: statusBarHeight + 'px' }"></view>
         <view class="title hidden-text">{{detail.title}}</view>
@@ -22,14 +29,14 @@
         </view>
         <scroll-view scroll-y scroll-with-animation class="detail-list-scroll">
           <u-cell-group class="details-list" :border="false">
-            <u-cell-item  :title="item.title"  v-for="(item,i) in detail.list" :key="i" :arrow="false" class="details-item" :border-bottom="false"></u-cell-item>
+            <u-cell-item  :title="item.title"  v-for="(item,i) in detail.list" :key="i" :arrow="false" class="details-item" :class="{active:activeIndex===i}" :border-bottom="false"></u-cell-item>
           </u-cell-group>
         </scroll-view>
       </view>
     </u-popup>
-<!--    <view class="footer">
+    <view class="footer" :class="{show:functionShow}">
       <view class="features">
-        <view class="features-list" @tap="show=true">
+        <view class="features-list" @tap="showCatalog=true">
           <view class="iconfont icon-mulu"></view>
           <view>目录</view>
         </view>
@@ -47,7 +54,7 @@
         </view>
       </view>
       <view class="safe-area"></view>
-    </view>-->
+    </view>
   </view>
 </template>
 
@@ -69,12 +76,19 @@ export default {
   name: "preview",
   data(){
     return {
-      activeLink:'',
       statusBarHeight: systemInfo.statusBarHeight+(menuButtonInfo.height||0),
-      show:false,
-      selectPreview:{},
-      detail:uni.getStorageSync('detail'),
-      links:[]
+      showCatalog:false,//显示目录
+      functionShow:true,//显示控制功能
+      activeLink:'',//当前选中播放列表
+      detail:uni.getStorageSync('detail'),//需要预览的详情
+      comicList:[],
+      //上拉加载
+      loadText: {
+        loadmore: '上拉加载更多',
+        loading: '努力加载中',
+        nomore: '没有更多了'
+      },
+      bottomStatus:'loadmore',
     }
   },
   components:{
@@ -88,29 +102,72 @@ export default {
     activeTab(){
       return this.classifyArr.find(({guid})=>guid ===this.detail.guid)||{}
     },
-    activeDetails(){
-      return this.detail.list.find(v=>v.link===this.activeLink)||{}
+    activeIndex(){
+      return this.detail.list.findIndex(v=>v.link===this.activeLink)
     },
+    activeDetail(){
+      return this.detail.list[this.activeIndex]||{}
+    }
   },
-  onLoad(data) {
-    this.selectPreview = getParams(data);
-    this.activeLink = this.selectPreview.link
-    this.getDetail()
+  async onLoad(data) {
+    const {link} = getParams(data);
+    this.activeLink =link
+    const list = await this.getDetail(this.activeIndex)
+    this.comicList.push(this.formatData(list,this.activeDetail))
   },
   methods:{
-    scrolltolower(){
-      console.log(11)
+    scroll(e){
+      this.functionShow=false
+      this.throttle(this.monitorScroll, 300, {immediate:true,isLastExec:true})
     },
-    async getDetail(){
-      const {pageUrl,previewParams}=this.activeTab
-      previewParams.url = this.activeLink
-      let {list} = this.activeDetails
-      if(!list){
-        const {links}=await crawl(pageUrl,previewParams)
-        this.activeDetails.list =links
-        list=links
+    //监听滚动到那个位置
+   async monitorScroll(e){
+      //漫画集滚动到那一集选中
+      const comicList = await this.getRect('.comic-list',true)
+      const index =  comicList.findIndex(v=>v.bottom>0)
+      const {link} =this.comicList[index] || {}
+      this.activeLink =link
+    },
+    //上拉加载
+    async scrolltolower(){
+      try {
+        if(this.bottomStatus ==='loading' || this.bottomStatus ==='nomore')return
+        this.bottomStatus ='loading'
+        const index = this.activeIndex+1
+        const detail = this.detail.list[index]
+        if(!detail){
+          //没有更多数据
+          this.$nextTick(()=>{
+            this.bottomStatus ='nomore'
+          })
+          return
+        }
+        let list  = await this.getDetail(index)
+        this.comicList.push(this.formatData(list,detail))
+      }catch (e){
+        console.error(e)
+      }finally {
+        this.bottomStatus ='loadmore'
       }
-      this.links = [...this.links,...list]
+    },
+    //数据格式
+    formatData(list,detail={}){
+      return {...detail,list}
+    },
+    //获取请求数据
+    async getDetail(index){
+      try {
+        const {pageUrl,previewParams}=this.activeTab
+        let {list,link} = this.detail.list[index] ||{}
+        previewParams.url = link
+        if(!list){
+          const {links}=await crawl(pageUrl,previewParams)
+          this.detail.list[index].list = list=links
+        }
+        return list
+      }catch (e){
+        console.error(e)
+      }
     }
   }
 }
@@ -119,11 +176,23 @@ export default {
 .preview{
   background: #1F2123;
   height:100vh;
-  .main{
-    /deep/ .u-image__image{
+  .title{
+    /deep/ .navbar{
+      transform: translateY(-100%);
+      transition: .1s;
+    }
+    &.show{
+      /deep/ .navbar{
+        transform: translateY(0%);
+      }
     }
   }
+
+  .loadmore{
+    padding:40rpx 0;
+  }
 }
+
 .popup-content{
   height: 100%;
   width: 80vw;
@@ -164,7 +233,12 @@ export default {
   .details-list{
     /deep/ .u-cell{
       padding: 12rpx 30rpx;
-      @extend .hidden-text;
+      .u-cell_title{
+        @extend .hidden-text;
+      }
+    }
+    .active, .active /deep/.u-cell{
+      color:$uni-color-primary;
     }
   }
 }
@@ -175,6 +249,11 @@ export default {
     left: 0;
     right: 0;
     z-index: 997;
+    transition: .1s;
+    transform: translateY(100%);
+    &.show{
+      transform: translateY(0%);
+    }
     .safe-area{
       height: env(safe-area-inset-bottom);
       width: 100%;

@@ -1,9 +1,9 @@
 <template>
   <view class="zoom-scroll" :style="{height,width}">
     <view
-        @touchstart.stop.prevent="touchstart"
-        @touchmove.stop.prevent="touchmove"
-        @touchend.stop.prevent="touchend"
+        @touchstart.prevent="touchstart"
+        @touchmove.prevent="touchmove"
+        @touchend.prevent="touchend"
         :style="{transform:`translate3d(${-left}px,${-top}px,1px) scale(${scale})`}"
         :class="{animation:isAnimation}"
         class="touch-main">
@@ -15,7 +15,7 @@
 <script>
 export default {
   name: "zoom-scroll",
-  emits:['scrolltolower'],
+  emits:['scrolltolower','scroll','touchTap','touchLongTap'],
   props: {
     isZoom: {
       type: Boolean,
@@ -67,6 +67,7 @@ export default {
       isTouch: false,
       box: null,
       lastMoveTime: 0,
+      touchstartTime:0,
       lastMoveStart: {
         y: 0,
         x: 0
@@ -85,12 +86,15 @@ export default {
   },
   methods: {
     scrollTop(e){
+      const {top,left} = this
+      this.$emit('scroll', {top, left})
       const {maxScrollTop} = this.scrollData
       if(maxScrollTop-e<= this.lowerThreshold){
-        this.$u.throttle(()=>{
-          this.$emit('scrolltolower')
-        }, 2000,true)
+        this.throttle(this.scrolltolower, 2000, {immediate:true})
       }
+    },
+    scrolltolower(){
+      this.$emit('scrolltolower')
     },
     getDistance(p1, p2) {
       const x = p2.pageX - p1.pageX,
@@ -122,10 +126,19 @@ export default {
       return this.scrollData
     },
     async touchend(e) {
+
       this.isTouch = false
       const startTime = Date.now();
       const [p1] = this.start
       const [now] = e.changedTouches
+      const {pageY: nowY, pageX: nowX} = now
+      //tap事件与longTap事件
+      if (Math.abs(p1.pageX - nowX) < 6 && Math.abs(p1.pageY - nowY) < 6) {
+
+          const fun = startTime - this.touchstartTime  > 300?'touchLongTap':'touchTap'
+            this.$emit(fun,e)
+      }
+
       const index = this.start.findIndex(v => {
         const num = 10
         return Math.abs(now.pageX - v.newPageX) <= num && Math.abs(now.pageY - v.newPageY) <= num
@@ -149,7 +162,6 @@ export default {
         return
       }
       if (this.start.length) return
-      const {pageY: nowY, pageX: nowX} = now
       let {top, left} = this.startRect
       top += (p1.pageY - nowY)
       left += (p1.pageX - nowX)
@@ -276,11 +288,11 @@ export default {
       }
     },
     async touchstart(e) {
-      e.preventDefault();
+      // e.preventDefault();
       this.isAnimation = false
       this.isTouchZoom = e.touches.length >= 2
       this.isTouch = true
-      this.lastMoveTime = Date.now();
+      this.touchstartTime= this.lastMoveTime = Date.now();
       const {top, left} = this
       this.startRect = {top, left}
       const [p1, p2] = this.start = e.touches;

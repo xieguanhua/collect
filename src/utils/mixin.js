@@ -61,6 +61,36 @@ module.exports = {
                     }
                 }).exec()
             })
+        },
+        //节流
+        // immediate立刻执行，
+        // isLastExec最后执行,
+        // 注：func必须穿声明方法的变量，不能直接传方法，否则无效
+        throttle(func, wait = 500, {immediate = true,isLastExec=false},...args) {
+            let prev = Date.now()
+            if(typeof func === 'function'){
+                clearTimeout(func.finTimer)
+                if(func.prev){
+                    prev =func.prev
+                }else{
+                    func.prev = prev
+                }
+                const now = Date.now()
+                if(immediate && !func.once){
+                    func.once =true
+                    func.apply(this, args)
+                }else if (Math.abs(now - prev) >= wait) {
+                    func.apply(this, args)
+                    func.prev = Date.now()
+                } else {
+                    func.finTimer = setTimeout(() => {
+                        func.prev = null
+                        func.once =false
+                        isLastExec &&func.apply(this, args)
+                    }, wait)
+                }
+            }
+
         }
     }
 }

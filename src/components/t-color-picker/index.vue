@@ -1,79 +1,85 @@
 <template>
-  <view v-show="show" class="t-wrapper" @touchmove.stop.prevent="moveHandle">
-    <view class="t-mask" :class="{active:active}" @click.stop="close"></view>
-    <view class="t-box" :class="{active:active}">
-      <view class="t-header">
-        <view class="t-header-button" @click.stop="close">取消</view>
-        <view class="t-header-button" @click.stop="confirm">确认</view>
-      </view>
-      <view class="t-color__box" :style="{ background: 'rgb(' + bgcolor.r + ',' + bgcolor.g + ',' + bgcolor.b + ')'}">
-        <view class="t-background boxs" @touchstart="touchstart($event, 0)" @touchmove="touchmove($event, 0)" @touchend="touchend($event, 0)">
-          <view class="t-color-mask"></view>
-          <view class="t-pointer" :style="{ top: site[0].top - 8 + 'px', left: site[0].left - 8 + 'px' }"></view>
+  <view class="t-wrapper" @touchmove.stop.prevent="moveHandle">
+    <view class="t-mask" @click.stop="close" v-show="show"></view>
+    <transition name="slide-fade">
+      <view class="t-box"  v-show="show">
+        <view class="t-header">
+          <view class="t-header-button" @click.stop="close">取消</view>
+          <view class="t-header-button" @click.stop="confirm">确认</view>
         </view>
-      </view>
-      <view class="t-control__box">
-        <view class="t-control__color">
-          <view class="t-control__color-content" :style="{ background: 'rgba(' + rgba.r + ',' + rgba.g + ',' + rgba.b + ',' + rgba.a + ')' }"></view>
+        <view class="t-color__box" :style="{ background: 'rgb(' + bgcolor.r + ',' + bgcolor.g + ',' + bgcolor.b + ')'}">
+          <view class="t-background boxs" @touchstart="touchstart($event, 0)" @touchmove="touchmove($event, 0)" @touchend="touchend($event, 0)">
+            <view class="t-color-mask"></view>
+            <view class="t-pointer" :style="{ top: site[0].top - 8 + 'px', left: site[0].left - 8 + 'px' }"></view>
+          </view>
         </view>
-        <view class="t-control-box__item">
-          <view class="t-controller boxs" @touchstart="touchstart($event, 1)" @touchmove="touchmove($event, 1)" @touchend="touchend($event, 1)">
-            <view class="t-hue">
-              <view class="t-circle" :style="{ left: site[1].left - 12 + 'px' }"></view>
+        <view class="t-control__box">
+          <view class="t-control__color">
+            <view class="t-control__color-content" :style="{ background: 'rgba(' + rgba.r + ',' + rgba.g + ',' + rgba.b + ',' + rgba.a + ')' }"></view>
+          </view>
+          <view class="t-control-box__item">
+            <view class="t-controller boxs" @touchstart="touchstart($event, 1)" @touchmove="touchmove($event, 1)" @touchend="touchend($event, 1)">
+              <view class="t-hue">
+                <view class="t-circle" :style="{ left: site[1].left - 12 + 'px' }"></view>
+              </view>
+            </view>
+            <view class="t-controller boxs" @touchstart="touchstart($event, 2)" @touchmove="touchmove($event, 2)" @touchend="touchend($event, 2)">
+              <view class="t-transparency">
+                <view class="t-circle" :style="{ left: site[2].left - 12 + 'px' }"></view>
+              </view>
             </view>
           </view>
-          <view class="t-controller boxs" @touchstart="touchstart($event, 2)" @touchmove="touchmove($event, 2)" @touchend="touchend($event, 2)">
-            <view class="t-transparency">
-              <view class="t-circle" :style="{ left: site[2].left - 12 + 'px' }"></view>
+        </view>
+        <view class="t-result__box">
+          <view v-if="mode" class="t-result__item">
+            <view class="t-result__box-input">{{hex}}</view>
+            <view class="t-result__box-text">HEX</view>
+          </view>
+          <template v-else>
+            <view class="t-result__item">
+              <view class="t-result__box-input">{{rgba.r}}</view>
+              <view class="t-result__box-text">R</view>
             </view>
-          </view>
-        </view>
-      </view>
-      <view class="t-result__box">
-        <view v-if="mode" class="t-result__item">
-          <view class="t-result__box-input">{{hex}}</view>
-          <view class="t-result__box-text">HEX</view>
-        </view>
-        <template v-else>
-          <view class="t-result__item">
-            <view class="t-result__box-input">{{rgba.r}}</view>
-            <view class="t-result__box-text">R</view>
-          </view>
-          <view class="t-result__item">
-            <view class="t-result__box-input">{{rgba.g}}</view>
-            <view class="t-result__box-text">G</view>
-          </view>
-          <view class="t-result__item">
-            <view class="t-result__box-input">{{rgba.b}}</view>
-            <view class="t-result__box-text">B</view>
-          </view>
-          <view class="t-result__item">
-            <view class="t-result__box-input">{{rgba.a}}</view>
-            <view class="t-result__box-text">A</view>
-          </view>
-        </template>
+            <view class="t-result__item">
+              <view class="t-result__box-input">{{rgba.g}}</view>
+              <view class="t-result__box-text">G</view>
+            </view>
+            <view class="t-result__item">
+              <view class="t-result__box-input">{{rgba.b}}</view>
+              <view class="t-result__box-text">B</view>
+            </view>
+            <view class="t-result__item">
+              <view class="t-result__box-input">{{rgba.a}}</view>
+              <view class="t-result__box-text">A</view>
+            </view>
+          </template>
 
-        <view class="t-result__item t-select" @click="select">
-          <view class="t-result__box-input">
-            <view>切换</view>
-            <view>模式</view>
+          <view class="t-result__item t-select" @click="select">
+            <view class="t-result__box-input">
+              <view>切换</view>
+              <view>模式</view>
+            </view>
+          </view>
+        </view>
+        <view class="t-alternative">
+          <view class="t-alternative__item" v-for="(item,index) in colorList" :key="index">
+            <view class="t-alternative__item-content" :style="{ background: 'rgba(' + item.r + ',' + item.g + ',' + item.b + ',' + item.a + ')' }"
+                  @click="selectColor(item)">
+            </view>
           </view>
         </view>
       </view>
-      <view class="t-alternative">
-        <view class="t-alternative__item" v-for="(item,index) in colorList" :key="index">
-          <view class="t-alternative__item-content" :style="{ background: 'rgba(' + item.r + ',' + item.g + ',' + item.b + ',' + item.a + ')' }"
-                @click="selectColor(item)">
-          </view>
-        </view>
-      </view>
-    </view>
+    </transition>
   </view>
 </template>
 
 <script>
 export default {
   props: {
+    value:{
+      type: Boolean,
+      default:false
+    },
     color: {
       type: Object,
       default () {
@@ -94,8 +100,6 @@ export default {
   },
   data() {
     return {
-      show: false,
-      active: false,
       // rgba 颜色
       rgba: {
         r: 0,
@@ -250,21 +254,11 @@ export default {
       this.show = true;
       this.$nextTick(() => {
         this.init();
-        setTimeout(() => {
-          this.active = true;
-          setTimeout(() => {
-            this.getSelectorQuery();
-          }, 350)
-        }, 50)
+        this.getSelectorQuery();
       })
     },
     close() {
-      this.active = false;
-      this.$nextTick(() => {
-        setTimeout(() => {
-          this.show = false;
-        }, 500)
-      })
+      this.show = false;
     },
     confirm() {
       this.close();
@@ -498,9 +492,22 @@ export default {
           .exec();
     }
   },
+  computed:{
+    show:{
+      set(nv){
+        this.$emit('input',nv)
+      },
+      get(){
+        return this.value
+      }
+    }
+  },
   watch: {
     spareColor(newVal) {
       this.colorList = newVal;
+    },
+    show(nv){
+      nv ? this.open():this.close()
     }
   }
 };
@@ -509,7 +516,6 @@ export default {
 <style>
 .t-wrapper {
   position: fixed;
-  top: 0;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -524,9 +530,6 @@ export default {
   padding-top: 0;
   background: #fff;
   transition: all 0.3s;
-  transform: translateY(100%);
-}
-.t-box.active {
   transform: translateY(0%);
 }
 .t-header {
@@ -552,7 +555,7 @@ export default {
   padding-right: 20upx;
 }
 .t-mask {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -560,10 +563,6 @@ export default {
   background: rgba(0, 0, 0, 0.6);
   z-index: -1;
   transition: all 0.3s;
-  opacity: 0;
-}
-.t-mask.active {
-  opacity: 1;
 }
 .t-color__box {
   position: relative;
@@ -744,5 +743,17 @@ export default {
 .t-alternative__item:active {
   transition: all 0.3s;
   transform: scale(1.1);
+}
+
+.slide-fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active {
+  transition: all .3s ease;
+}
+.slide-fade-enter, .slide-fade-leave-to
+  /* .slide-fade-leave-active for below version 2.1.8 */ {
+  transform: translateY(100%);
+  opacity: 0;
 }
 </style>
