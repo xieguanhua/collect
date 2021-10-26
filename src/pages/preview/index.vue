@@ -4,7 +4,7 @@
     <zoom-scroll
         @scrolltolower="scrolltolower"
         @scroll="scroll"
-        :lowerThreshold="2000"
+        :lowerThreshold="5000"
         @touchTap="functionShow=!functionShow">
         <view class="main">
           <view class="comic-list" v-for="(item,i) in comicList" :key="i">
