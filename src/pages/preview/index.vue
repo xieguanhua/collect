@@ -2,14 +2,15 @@
   <view  class="preview" :style="cssTheme">
     <navbar :title="activeDetail.title" fixed immersive :class="{show:functionShow}" class="title"></navbar>
     <zoom-scroll
-        @scrolltolower="scrolltolower"
+        @scrolltolower="scrollToLower"
+        @scrolltoupper="scrollTopPer"
         @scroll="scroll"
-        :lowerThreshold="5000"
+        :lowerThreshold="2000"
         @touchTap="functionShow=!functionShow">
         <view class="main">
           <view class="comic-list" v-for="(item,i) in comicList" :key="i">
             <u-image v-for="(l,k) in item.list"
-                     :src="l"
+                     :src="l.path"
                      :key="k"
                      lazy-load
                      mode="widthFix"
@@ -107,13 +108,14 @@ export default {
     },
     activeDetail(){
       return this.detail.list[this.activeIndex]||{}
-    }
+    },
+
   },
   async onLoad(data) {
     const {link} = getParams(data);
     this.activeLink =link
     const list = await this.getDetail(this.activeIndex)
-    this.comicList.push(this.formatData(list,this.activeDetail))
+    this.comicList.push(await this.formatData(list,this.activeDetail))
   },
   methods:{
     scroll(e){
@@ -128,8 +130,19 @@ export default {
       const {link} =this.comicList[index] || {}
       this.activeLink =link
     },
+    //下拉加载
+  async scrollTopPer(){
+      const index = this.activeIndex-1
+      const detail = this.detail.list[index]
+      if(!detail){
+        //没有更多数据
+        return
+      }
+    let list  = await this.getDetail(index)
+    this.comicList.unshift(await this.formatData(list,detail))
+    },
     //上拉加载
-    async scrolltolower(){
+    async scrollToLower(){
       try {
         if(this.bottomStatus ==='loading' || this.bottomStatus ==='nomore')return
         this.bottomStatus ='loading'
@@ -143,7 +156,7 @@ export default {
           return
         }
         let list  = await this.getDetail(index)
-        this.comicList.push(this.formatData(list,detail))
+        this.comicList.push(await this.formatData(list,detail))
       }catch (e){
         console.error(e)
       }finally {
@@ -151,7 +164,8 @@ export default {
       }
     },
     //数据格式
-    formatData(list,detail={}){
+   async formatData(list,detail={}){
+      list = await Promise.all(list.map(v=>this.getImageInfo(v)))
       return {...detail,list}
     },
     //获取请求数据

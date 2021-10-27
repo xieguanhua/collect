@@ -15,7 +15,7 @@
 <script>
 export default {
   name: "zoom-scroll",
-  emits:['scrolltolower','scroll','touchTap','touchLongTap'],
+  emits:['scrolltolower','scroll','touchTap','touchLongTap','scrolltoupper'],
   props: {
     isZoom: {
       type: Boolean,
@@ -56,10 +56,16 @@ export default {
     lowerThreshold:{
       type: Number,
       default: 300
+    },
+    //距顶部多远时（单位px），触发 scrolltoupper 事件
+    upperThreshold:{
+      type: Number,
+      default: 300
     }
   },
   data() {
     return {
+      currentVal:0,
       isAnimation: false,
       top: 0,
       left: 0,
@@ -88,13 +94,25 @@ export default {
     scrollTop(e){
       const {top,left} = this
       this.$emit('scroll', {top, left})
-      const {maxScrollTop} = this.scrollData
-      if(maxScrollTop-e<= this.lowerThreshold){
-        this.throttle(this.scrolltolower, 2000, {immediate:true})
+      if(this.currentVal < e){
+        //上滑
+        const {maxScrollTop} = this.scrollData
+        if(maxScrollTop-e< this.lowerThreshold){
+          this.throttle(this.scrolltolower, 2000, {immediate:true})
+        }
+      }else{
+        //下滑加载
+        if(this.top<this.upperThreshold){
+          this.throttle(this.scrolltoupper, 2000, {immediate:true})
+        }
       }
+      this.currentVal = e;
     },
     scrolltolower(){
       this.$emit('scrolltolower')
+    },
+    scrolltoupper(){
+      this.$emit('scrolltoupper')
     },
     getDistance(p1, p2) {
       const x = p2.pageX - p1.pageX,
@@ -126,7 +144,6 @@ export default {
       return this.scrollData
     },
     async touchend(e) {
-
       this.isTouch = false
       const startTime = Date.now();
       const [p1] = this.start
@@ -169,14 +186,14 @@ export default {
       /*  if (this.scrollY) this.top = res.top
         if (this.scrollX) this.left = res.left*/
       const ms = 50 //回弹阻尼
-      const resilience = (move, maxMove, callback) => {
+      const resilience = (move, maxMove, callback,minMove=0) => {
         if (this.isTouch) return
         let isSetTime = false
-        if (move < 0) {
-          const m = Number((Math.abs(move) / ms).toFixed(1))
+        if (move < minMove) {
+          const m = Number((Math.abs(move-minMove) / ms).toFixed(1))
           move += m
           if (!m) {
-            move = 0
+            move = minMove
           } else {
             isSetTime = true
           }
@@ -191,7 +208,7 @@ export default {
         }
         if (isSetTime) {
           setTimeout(() => {
-            resilience(move, maxMove, callback)
+            resilience(move, maxMove, callback,minMove)
           }, 1)
         }
         callback(move)
@@ -237,17 +254,21 @@ export default {
         await inertiaMove(nowY - this.lastMoveStart.y, res.top, res.maxScrollTop, this.bounceY, (e) => {
           this.top = e
         })
-        if (this.bounceY) resilience(this.top, res.maxScrollTop, (e) => {
-          this.top = e
-        })
+        if (this.bounceY) {
+          resilience(this.top, res.maxScrollTop, (e) => {
+            this.top = e
+          })
+        }
       }
       if (this.scrollX) {
         await inertiaMove(nowX - this.lastMoveStart.x, res.left, res.maxScrollLeft, this.bounceX, (e) => {
           this.left = e
         })
-        if (this.bounceX) resilience(this.left, res.maxScrollLeft, (e) => {
-          this.left = e
-        })
+        if (this.bounceX){
+          resilience(this.left, res.maxScrollLeft, (e) => {
+            this.left = e
+          })
+        }
       }
     },
     async touchmove(e) {
