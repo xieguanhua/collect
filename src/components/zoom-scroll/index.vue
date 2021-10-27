@@ -7,6 +7,12 @@
         :style="{transform:`translate3d(${-left}px,${-top}px,1px) scale(${scale})`}"
         :class="{animation:isAnimation}"
         class="touch-main">
+
+       <slot name="pull-down" v-if="refresherEnabled">
+         <view class="pull-down">
+           <u-loadmore :status="downTrigger?'loading':'loadmore'" :load-text="loadText" />
+         </view>
+       </slot>
       <slot></slot>
     </view>
   </view>
@@ -17,6 +23,14 @@ export default {
   name: "zoom-scroll",
   emits:['scrolltolower','scroll','touchTap','touchLongTap','scrolltoupper'],
   props: {
+    zoom:{
+      type:Number,
+      default:0
+    },
+    scrollTop:{
+      type:Number,
+      default:0
+    },
     isZoom: {
       type: Boolean,
       default: true
@@ -43,7 +57,6 @@ export default {
       type: Number,
       default: 3
     },
-
     height: {
       type: String,
       default: '100%'
@@ -60,11 +73,25 @@ export default {
     //距顶部多远时（单位px），触发 scrolltoupper 事件
     upperThreshold:{
       type: Number,
-      default: 300
+      default: 60
+    },
+    //开启下拉刷新
+    refresherEnabled:{
+      type: Boolean,
+      default: false
+    },
+    scrollTopPer:{
+      type: Function,
+      default: null
     }
   },
   data() {
     return {
+      loadText: {
+        loadmore: '下拉加载更多',
+        loading: '努力加载中',
+      },
+      downTrigger:false,
       currentVal:0,
       isAnimation: false,
       top: 0,
@@ -86,24 +113,34 @@ export default {
     }
   },
   watch:{
+    scale(e){
+      if(e!==this.zoom){
+        this.$emit('update:zoom',e)
+        this.$emit('zoom',e)
+      }
+    },
+    scrollTop:{
+      handler(e){
+          if(this.top !== e){
+            this.top = this.scrollTop
+          }
+      },
+      deep:true
+    },
     top(e){
-      this.scrollTop(e)
+      this.onScrollTop(e)
     }
   },
   methods: {
-    scrollTop(e){
+    onScrollTop(e){
       const {top,left} = this
       this.$emit('scroll', {top, left})
+      this.$emit('update:scrollTop', e)
       if(this.currentVal < e){
         //上滑
         const {maxScrollTop} = this.scrollData
         if(maxScrollTop-e< this.lowerThreshold){
           this.throttle(this.scrolltolower, 2000, {immediate:true})
-        }
-      }else{
-        //下滑加载
-        if(this.top<this.upperThreshold){
-          this.throttle(this.scrolltoupper, 2000, {immediate:true})
         }
       }
       this.currentVal = e;
@@ -111,8 +148,17 @@ export default {
     scrolltolower(){
       this.$emit('scrolltolower')
     },
-    scrolltoupper(){
-      this.$emit('scrolltoupper')
+    //下拉刷新复位
+    restore(top = 0){
+      this.downTrigger = false
+      if(this.isTouch)return
+      if(!top){
+        this.resilience(this.top, this.scrollData.touchMain.height, (e) => {
+          this.top = e
+        })
+      }else{
+        this.top = top+this.upperThreshold
+      }
     },
     getDistance(p1, p2) {
       const x = p2.pageX - p1.pageX,
@@ -151,7 +197,6 @@ export default {
       const {pageY: nowY, pageX: nowX} = now
       //tap事件与longTap事件
       if (Math.abs(p1.pageX - nowX) < 6 && Math.abs(p1.pageY - nowY) < 6) {
-
           const fun = startTime - this.touchstartTime  > 300?'touchLongTap':'touchTap'
             this.$emit(fun,e)
       }
@@ -185,34 +230,6 @@ export default {
       const res = await this.scrollTo(top, left)
       /*  if (this.scrollY) this.top = res.top
         if (this.scrollX) this.left = res.left*/
-      const ms = 50 //回弹阻尼
-      const resilience = (move, maxMove, callback,minMove=0) => {
-        if (this.isTouch) return
-        let isSetTime = false
-        if (move < minMove) {
-          const m = Number((Math.abs(move-minMove) / ms).toFixed(1))
-          move += m
-          if (!m) {
-            move = minMove
-          } else {
-            isSetTime = true
-          }
-        } else if (move > maxMove) {
-          const m = Number(((move - maxMove) / ms).toFixed(1))
-          move -= m
-          if (!m) {
-            move = maxMove
-          } else {
-            isSetTime = true
-          }
-        }
-        if (isSetTime) {
-          setTimeout(() => {
-            resilience(move, maxMove, callback,minMove)
-          }, 1)
-        }
-        callback(move)
-      }
       //惯性移动
       const inertiaMove = async (velocity, scroll, maxScroll, bounce, callback) => {
         return new Promise(resolve => {
@@ -255,9 +272,25 @@ export default {
           this.top = e
         })
         if (this.bounceY) {
-          resilience(this.top, res.maxScrollTop, (e) => {
-            this.top = e
-          })
+          const num = -this.upperThreshold
+          const minMove = this.top-num<0 && this.refresherEnabled?num:0
+          this.resilience(this.top, res.maxScrollTop, (e) => {
+            if(minMove && e-num>=0){
+              if(this.downTrigger)return
+              this.downTrigger =true
+            //触发下拉刷新
+              if(this.scrollTopPer){
+                this.scrollTopPer({top: this.top}).finally(this.restore)
+              }else{
+                this.$emit('scrolltoupper',{
+                  callback:this.restore,
+                  top: this.top
+                })
+              }
+            }else{
+              this.top = e
+            }
+          },minMove)
         }
       }
       if (this.scrollX) {
@@ -265,13 +298,14 @@ export default {
           this.left = e
         })
         if (this.bounceX){
-          resilience(this.left, res.maxScrollLeft, (e) => {
+          this.resilience(this.left, res.maxScrollLeft, (e) => {
             this.left = e
           })
         }
       }
     },
     async touchmove(e) {
+      clearTimeout(this.timer)
       this.isTouch = true
       const [p1, p2] = this.start
       const [now1, now2] = e.touches;  //得到第二组两个点
@@ -296,6 +330,8 @@ export default {
       const res = await this.scrollTo(top, left, this.bounceY, this.bounceX)
       if (this.scrollY) this.top = res.top
       if (this.scrollX) this.left = res.left
+      this.loadText.loadmore = this.top + this.upperThreshold<=0?'松开加载数据': '下拉加载更多'
+
       /**
        * 缓动代码
        */
@@ -309,6 +345,7 @@ export default {
       }
     },
     async touchstart(e) {
+      clearTimeout(this.timer)
       // e.preventDefault();
       this.isAnimation = false
       this.isTouchZoom = e.touches.length >= 2
@@ -339,12 +376,41 @@ export default {
           width
         }
       }
+    },
+     resilience(move, maxMove, callback,minMove=0)  {
+      const ms = 50 //回弹阻尼
+      if (this.isTouch) return
+      let isSetTime = false
+      if (move < minMove) {
+        const m = Number((Math.abs(move-minMove) / ms).toFixed(1))
+        move += m
+        if (!m) {
+          move = minMove
+        } else {
+          isSetTime = true
+        }
+      } else if (move > maxMove) {
+        const m = Number(((move - maxMove) / ms).toFixed(1))
+        move -= m
+        if (!m) {
+          move = maxMove
+        } else {
+          isSetTime = true
+        }
+      }
+      if (isSetTime) {
+        this.timer =setTimeout(() => {
+          this.resilience(move, maxMove, callback,minMove)
+        }, 1)
+      }
+      callback(move)
     }
   }
 }
 </script>
 
 <style>
+
 .zoom-scroll {
   overflow: hidden;
 }
@@ -356,5 +422,13 @@ export default {
 .touch-main {
   font-size: 0;
   transform-origin: left top;
+}
+.pull-down{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  transform: translateY(-100%);
+  padding: 20px 0;
 }
 </style>

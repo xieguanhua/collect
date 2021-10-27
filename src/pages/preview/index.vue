@@ -5,20 +5,20 @@
         @scrolltolower="scrollToLower"
         @scrolltoupper="scrollTopPer"
         @scroll="scroll"
+        :zoom.sync="zoom"
+        :scroll-top.sync="scrollTop"
         :lowerThreshold="2000"
+        :refresherEnabled="refresherEnabled"
         @touchTap="functionShow=!functionShow">
-        <view class="main">
-          <view class="comic-list" v-for="(item,i) in comicList" :key="i">
-            <u-image v-for="(l,k) in item.list"
-                     :src="l.path"
-                     :key="k"
-                     lazy-load
-                     mode="widthFix"
-                     width="100%">
-            </u-image>
+        <view>
+          <view class="main" :style="{height:`${totalHeight}px`}">
+            <view class="comic-list" v-for="(item,i) in comicList" :key="i">
+              <cartoon-load v-for="(l,k) in item.list" :item="l" :key="k"/>
+            </view>
           </view>
           <u-loadmore :status="bottomStatus" :load-text="loadText" class="loadmore" v-if="comicList.length"/>
         </view>
+
     </zoom-scroll>
     <u-popup v-model="showCatalog" mode="right" safe-area-inset-bottom>
       <view class="popup-content">
@@ -73,6 +73,7 @@ let menuButtonInfo = {};
 // #ifdef MP-WEIXIN || MP-BAIDU || MP-TOUTIAO || MP-QQ
 menuButtonInfo = uni.getMenuButtonBoundingClientRect();
 // #endif
+import cartoonLoad from './cartoonLoad'
 export default {
   name: "preview",
   data(){
@@ -90,11 +91,14 @@ export default {
         nomore: '没有更多了'
       },
       bottomStatus:'loadmore',
+      zoom:1,
+      scrollTop:0,
     }
   },
   components:{
     navbar,
-    zoomScroll
+    zoomScroll,
+    cartoonLoad
   },
   computed:{
     ...mapGetters({
@@ -109,13 +113,22 @@ export default {
     activeDetail(){
       return this.detail.list[this.activeIndex]||{}
     },
-
+    refresherEnabled(){
+      return !!this.detail.list[this.activeIndex-1]
+    },
+    totalHeight(){
+      let height = 0
+      this.comicList.forEach(v=>{
+        height+=v.height
+      })
+      return height
+    }
   },
   async onLoad(data) {
     const {link} = getParams(data);
     this.activeLink =link
-    const list = await this.getDetail(this.activeIndex)
-    this.comicList.push(await this.formatData(list,this.activeDetail))
+    const list = await this.getDetail(this.activeIndex,{showLoading:true})
+    this.comicList.push(list)
   },
   methods:{
     scroll(e){
@@ -131,7 +144,8 @@ export default {
       this.activeLink =link
     },
     //下拉加载
-  async scrollTopPer(){
+  async scrollTopPer(e){
+      const {callback} =e
       const index = this.activeIndex-1
       const detail = this.detail.list[index]
       if(!detail){
@@ -139,8 +153,11 @@ export default {
         return
       }
     let list  = await this.getDetail(index)
-    this.comicList.unshift(await this.formatData(list,detail))
-    },
+    this.comicList.unshift(list)
+    setTimeout(()=>{
+      callback(list.height*this.zoom+this.scrollTop)
+    })
+  },
     //上拉加载
     async scrollToLower(){
       try {
@@ -156,7 +173,7 @@ export default {
           return
         }
         let list  = await this.getDetail(index)
-        this.comicList.push(await this.formatData(list,detail))
+        this.comicList.push(list)
       }catch (e){
         console.error(e)
       }finally {
@@ -166,17 +183,23 @@ export default {
     //数据格式
    async formatData(list,detail={}){
       list = await Promise.all(list.map(v=>this.getImageInfo(v)))
-      return {...detail,list}
+     let height = 0
+     list.forEach(v=>{
+       height += v.widthFixH||0
+     })
+      return {...detail,list,height}
     },
     //获取请求数据
-    async getDetail(index){
+    async getDetail(index,config){
       try {
         const {pageUrl,previewParams}=this.activeTab
-        let {list,link} = this.detail.list[index] ||{}
+        const detail = this.detail.list[index] ||{}
+         let {list,link} = detail
         previewParams.url = link
         if(!list){
-          const {links}=await crawl(pageUrl,previewParams)
-          this.detail.list[index].list = list=links
+          const {links}=await crawl(pageUrl,previewParams,config)
+          list = await this.formatData(links,detail)
+          this.detail.list[index].list = list
         }
         return list
       }catch (e){

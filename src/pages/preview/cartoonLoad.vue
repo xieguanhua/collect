@@ -1,0 +1,79 @@
+<template>
+  <view :style="{height:`${item.widthFixH}px`}" class="cartoon">
+      <view class="progress" v-if="loading && !loadingErr">
+        <u-circle-progress :active-color="theme.primary"
+                           :percent="percent"
+                           :inactive-color="theme.bgColor"
+                           :border-width="8"
+                           :duration="3000"
+                           bg-color="transparent" :width="120">
+          <text class='u-progress-info'>查找中</text>
+        </u-circle-progress>
+      </view>
+      <view v-else-if="loadingErr" class="error">
+        <image
+            src="/static/image/preview/comicLoad.png"
+            class="image"
+            mode="widthFix"
+        ></image>
+        <view>图片加载失败</view>
+      </view>
+      <image
+          v-show="!loading && !loadingErr"
+          :src="item.path"
+           mode="aspectFill"
+          :draggable="false"
+          @load="load"
+          @error="error"
+          style="width: 100%; height:100%;"
+      ></image>
+  </view>
+</template>
+
+<script>
+export default {
+  name: "cartoonLoading",
+  props:{
+    item:{
+      type:Object,
+      default:()=>({})
+    }
+  },
+  data(){
+    return {
+      percent:98,
+      loading:true,
+      loadingErr:false
+    }
+  },
+  mounted() {
+
+  },
+  methods:{
+    load(){
+      this.loading= false
+    },
+    error(){
+      this.loadingErr =true
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.cartoon{
+    width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.error{
+  font-size:28rpx;
+text-align: center;
+  color: $uni-color-primary;
+  .image{
+    width:400rpx;
+  }
+
+}
+</style>
