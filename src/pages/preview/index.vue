@@ -12,11 +12,9 @@
         @touchTap="functionShow=!functionShow">
         <view>
           <view class="main" :style="{height:`${totalHeight}px`}">
-            <view class="comic-list" v-for="(item,i) in comicList" :key="i">
-              <cartoon-load v-for="(l,k) in item.list" :item="l" :key="k"/>
-            </view>
+            <cartoon-load v-for="(l,k) in renderList" :item="l" :key="k"/>
           </view>
-          <u-loadmore :status="bottomStatus" :load-text="loadText" class="loadmore" v-if="comicList.length"/>
+          <u-loadmore :status="bottomStatus" :load-text="loadText" class="loadmore" v-if="comicList.length && pullEnabled"/>
         </view>
 
     </zoom-scroll>
@@ -26,11 +24,11 @@
         <view class="title hidden-text">{{detail.title}}</view>
         <view class="remark">
           <view class="hidden-text">{{detail.title}}</view>
-          <view class="order">倒序</view>
+          <view class="order" @click="setInverted">{{invertedText}}</view>
         </view>
         <scroll-view scroll-y scroll-with-animation class="detail-list-scroll">
           <u-cell-group class="details-list" :border="false">
-            <u-cell-item  :title="item.title"  v-for="(item,i) in detail.list" :key="i" :arrow="false" class="details-item" :class="{active:activeIndex===i}" :border-bottom="false"></u-cell-item>
+            <u-cell-item  :title="item.title"  v-for="(item,i) in directoryList" :key="i" :arrow="false" class="details-item" :class="{active:activeIndex===i}" :border-bottom="false"></u-cell-item>
           </u-cell-group>
         </scroll-view>
       </view>
@@ -41,14 +39,17 @@
           <view class="iconfont icon-mulu"></view>
           <view>目录</view>
         </view>
-        <view class="features-list">
+        <view class="features-list"  @click="setInverted">
           <view class="iconfont icon-paixu"></view>
-          <view>排序</view>
+          <view>{{ invertedText }}</view>
         </view>
-        <view class="features-list">
+      <!-- #ifdef APP-PLUS-->
+        <view class="features-list" @tap="setLandscape">
           <view class="iconfont icon-shuping"></view>
-          <view>竖屏</view>
+          <view>{{ landscape?"竖屏":"横屏"}}</view>
         </view>
+      <!-- #endif-->
+
         <view class="features-list">
           <view class="iconfont icon-shangxiahuadong"></view>
           <view>卷轴</view>
@@ -66,7 +67,7 @@ import {
 import {getParams} from '@/utils'
 import navbar from '@/components/navbar'
 import zoomScroll from '@/components/zoom-scroll'
-import {mapGetters} from "vuex";
+import {mapGetters, mapMutations} from "vuex";
 const systemInfo = uni.getSystemInfoSync();
 let menuButtonInfo = {};
 // 如果是小程序，获取右上角胶囊的尺寸信息，避免导航栏右侧内容与胶囊重叠(支付宝小程序非本API，尚未兼容)
@@ -78,12 +79,14 @@ export default {
   name: "preview",
   data(){
     return {
+      landscape:true,
       statusBarHeight: systemInfo.statusBarHeight+(menuButtonInfo.height||0),
       showCatalog:false,//显示目录
       functionShow:true,//显示控制功能
       activeLink:'',//当前选中播放列表
       detail:uni.getStorageSync('detail'),//需要预览的详情
       comicList:[],
+      renderList:[],
       //上拉加载
       loadText: {
         loadmore: '上拉加载更多',
@@ -102,78 +105,137 @@ export default {
   },
   computed:{
     ...mapGetters({
-      classifyArr: 'details/classifyArr'
+      classifyArr: 'details/classifyArr',
+      inverted: 'details/orderBy',
     }),
+    invertedText(){
+      return this.inverted?'倒叙':'正序'
+    },
+    directoryList(){
+      const list  = [...this.detail.list]
+      return this.inverted ?list.reverse():list
+    },
     activeTab(){
       return this.classifyArr.find(({guid})=>guid ===this.detail.guid)||{}
     },
     activeIndex(){
-      return this.detail.list.findIndex(v=>v.link===this.activeLink)
+      return this.directoryList.findIndex(v=>v.link===this.activeLink)
     },
     activeDetail(){
-      return this.detail.list[this.activeIndex]||{}
+      return this.directoryList[this.activeIndex]||{}
+    },
+    pullEnabled(){
+      return !!this.directoryList[this.activeIndex+1]
     },
     refresherEnabled(){
-      return !!this.detail.list[this.activeIndex-1]
+      return !!this.directoryList[this.activeIndex-1]
     },
     totalHeight(){
       let height = 0
       this.comicList.forEach(v=>{
-        height+=v.height
+        height += v.widthFixH||0
       })
       return height
+    },
+  },
+  watch:{
+    comicList(){
+      this.setRenderList()
     }
+  },
+  onUnload(){
+    // #ifdef APP-PLUS
+    plus.screen.lockOrientation('portrait')
+    // #endif
   },
   async onLoad(data) {
     const {link} = getParams(data);
     this.activeLink =link
-    const list = await this.getDetail(this.activeIndex,{showLoading:true})
-    this.comicList.push(list)
+    try {
+      uni.showLoading({
+        title:'加载中',
+      })
+      const list = await this.getDetail(this.activeIndex)
+      this.comicList= [...this.comicList,...list]
+    }catch (e){
+        console.error(e)
+    }finally {
+      uni.hideLoading()
+    }
   },
   methods:{
-    scroll(e){
+    ...mapMutations({
+      setOrderBy: 'details/setOrderBy'
+    }),
+    setLandscape(){
+
+      this.statusBarHeight= systemInfo.statusBarHeight+(menuButtonInfo.height||0)
+      this.landscape = plus.navigator.getOrientation() !== 0;
+      plus.screen.unlockOrientation();
+      plus.screen.lockOrientation( this.landscape?'portrait-primary':'landscape-primary');
+    },
+    setInverted(){
+        this.comicList.reverse()
+        this.setOrderBy(!this.inverted)
+    },
+    scroll(){
       this.functionShow=false
       this.throttle(this.monitorScroll, 300, {immediate:true,isLastExec:true})
+      this.setRenderList()
+    },
+    setRenderList(){
+      const { windowHeight } = uni.getSystemInfoSync();
+      let scrollTop = this.scrollTop<0?0:this.scrollTop/this.zoom
+      if(scrollTop+windowHeight>this.totalHeight){
+        scrollTop = this.totalHeight-windowHeight
+      }
+      let height = 0
+      let dataList = []
+      for (let j=0;j<this.comicList.length;j++){
+        const v=this.comicList[j]
+        v.top = height
+        height += v.widthFixH||0
+        if(v.top>=scrollTop && v.top<=scrollTop+windowHeight || height>=scrollTop && height<=scrollTop+windowHeight || v.top<=scrollTop && height>= scrollTop+windowHeight){
+          dataList.push(v)
+        }else if(height>=scrollTop+windowHeight){
+          dataList.push(v)
+          break
+        }
+      }
+      this.renderList= dataList
     },
     //监听滚动到那个位置
    async monitorScroll(e){
       //漫画集滚动到那一集选中
-      const comicList = await this.getRect('.comic-list',true)
-      const index =  comicList.findIndex(v=>v.bottom>0)
-      const {link} =this.comicList[index] || {}
-      this.activeLink =link
-    },
+     this.activeLink = this.renderList[0].parentLink
+   },
     //下拉加载
   async scrollTopPer(e){
       const {callback} =e
       const index = this.activeIndex-1
-      const detail = this.detail.list[index]
+      const detail = this.directoryList[index]
       if(!detail){
         //没有更多数据
         return
       }
     let list  = await this.getDetail(index)
-    this.comicList.unshift(list)
-    setTimeout(()=>{
-      callback(list.height*this.zoom+this.scrollTop)
+    let height = 0
+    list.forEach(v=>{
+      height += v.widthFixH||0
     })
+    callback(height*this.zoom+this.scrollTop)
+
+    this.$nextTick(this.setRenderList)
+    this.comicList= [...list,...this.comicList]
   },
     //上拉加载
     async scrollToLower(){
       try {
-        if(this.bottomStatus ==='loading' || this.bottomStatus ==='nomore')return
+        if(this.bottomStatus ==='loading' || this.bottomStatus ==='nomore' || !this.pullEnabled)return
         this.bottomStatus ='loading'
         const index = this.activeIndex+1
-        const detail = this.detail.list[index]
-        if(!detail){
-          //没有更多数据
-          this.$nextTick(()=>{
-            this.bottomStatus ='nomore'
-          })
-          return
-        }
         let list  = await this.getDetail(index)
-        this.comicList.push(list)
+        this.comicList= [...this.comicList,...list]
       }catch (e){
         console.error(e)
       }finally {
@@ -182,18 +244,21 @@ export default {
     },
     //数据格式
    async formatData(list,detail={}){
+      const {link} = detail
+     if(typeof list === 'string'){
+       list =[list]
+     }
       list = await Promise.all(list.map(v=>this.getImageInfo(v)))
-     let height = 0
-     list.forEach(v=>{
-       height += v.widthFixH||0
-     })
-      return {...detail,list,height}
+      list.forEach(v=>{
+      v.parentLink = link
+      })
+      return list
     },
     //获取请求数据
     async getDetail(index,config){
       try {
         const {pageUrl,previewParams}=this.activeTab
-        const detail = this.detail.list[index] ||{}
+        const detail = this.directoryList[index] ||{}
          let {list,link} = detail
         previewParams.url = link
         if(!list){

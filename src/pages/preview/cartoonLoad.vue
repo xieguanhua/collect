@@ -1,5 +1,5 @@
 <template>
-  <view :style="{height:`${item.widthFixH}px`}" class="cartoon">
+  <view :style="{height:`${item.widthFixH}px`,top:`${item.top}px`}" class="cartoon">
       <view class="progress" v-if="loading && !loadingErr">
         <u-circle-progress :active-color="theme.primary"
                            :percent="percent"
@@ -20,7 +20,7 @@
       </view>
       <image
           v-show="!loading && !loadingErr"
-          :src="item.path"
+          :src="item.link"
            mode="aspectFill"
           :draggable="false"
           @load="load"
@@ -51,7 +51,9 @@ export default {
   },
   methods:{
     load(){
+    setTimeout(()=>{
       this.loading= false
+    },300)
     },
     error(){
       this.loadingErr =true
@@ -63,9 +65,11 @@ export default {
 <style lang="scss" scoped>
 .cartoon{
     width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 0;
 }
 .error{
   font-size:28rpx;

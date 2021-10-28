@@ -103,6 +103,7 @@ module.exports = {
                         const ratio = windowWidth/width
                         e.widthFixW = parseInt(width * ratio)
                         e.widthFixH = parseInt(height * ratio)
+                        e.link = src
                         resolve(e)
                     },
                     fail:reject

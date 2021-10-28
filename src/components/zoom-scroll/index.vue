@@ -9,9 +9,12 @@
         class="touch-main">
 
        <slot name="pull-down" v-if="refresherEnabled">
-         <view class="pull-down">
-           <u-loadmore :status="downTrigger?'loading':'loadmore'" :load-text="loadText" />
-         </view>
+        <view  class="pull-down">
+          <view class="status-bar" :style="{height: statusBarHeight + 'px' }"></view>
+          <view>
+            <u-loadmore :status="downTrigger?'loading':'loadmore'" :load-text="loadText" />
+          </view>
+        </view>
        </slot>
       <slot></slot>
     </view>
@@ -19,6 +22,7 @@
 </template>
 
 <script>
+let systemInfo = uni.getSystemInfoSync();
 export default {
   name: "zoom-scroll",
   emits:['scrolltolower','scroll','touchTap','touchLongTap','scrolltoupper'],
@@ -87,6 +91,7 @@ export default {
   },
   data() {
     return {
+      statusBarHeight: systemInfo.statusBarHeight,
       loadText: {
         loadmore: '下拉加载更多',
         loading: '努力加载中',
@@ -112,6 +117,11 @@ export default {
       scrollData:{}
     }
   },
+  computed:{
+    upperThresholdScale(){
+      return this.upperThreshold * this.scale + this.statusBarHeight
+    }
+  },
   watch:{
     scale(e){
       if(e!==this.zoom){
@@ -134,6 +144,7 @@ export default {
   methods: {
     onScrollTop(e){
       const {top,left} = this
+      if(this.isTouchZoom)return
       this.$emit('scroll', {top, left})
       this.$emit('update:scrollTop', e)
       if(this.currentVal < e){
@@ -157,7 +168,7 @@ export default {
           this.top = e
         })
       }else{
-        this.top = top+this.upperThreshold
+        this.top = top
       }
     },
     getDistance(p1, p2) {
@@ -272,7 +283,7 @@ export default {
           this.top = e
         })
         if (this.bounceY) {
-          const num = -this.upperThreshold
+          const num = -this.upperThresholdScale
           const minMove = this.top-num<0 && this.refresherEnabled?num:0
           this.resilience(this.top, res.maxScrollTop, (e) => {
             if(minMove && e-num>=0){
@@ -330,7 +341,7 @@ export default {
       const res = await this.scrollTo(top, left, this.bounceY, this.bounceX)
       if (this.scrollY) this.top = res.top
       if (this.scrollX) this.left = res.left
-      this.loadText.loadmore = this.top + this.upperThreshold<=0?'松开加载数据': '下拉加载更多'
+      this.loadText.loadmore = this.top + this.upperThresholdScale<=0?'松开加载数据': '下拉加载更多'
 
       /**
        * 缓动代码
