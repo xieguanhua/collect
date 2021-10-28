@@ -4,11 +4,12 @@
     <zoom-scroll
         @scrolltolower="scrollToLower"
         @scrolltoupper="scrollTopPer"
+
         @scroll="scroll"
         :zoom.sync="zoom"
         :scroll-top.sync="scrollTop"
         :lowerThreshold="2000"
-        @touchmove="functionShow=false"
+        @touchmove="touchmove"
         :refresherEnabled="refresherEnabled"
         @touchTap="functionShow=!functionShow">
         <view>
@@ -36,7 +37,7 @@
     </u-popup>
     <view class="footer" :class="{show:functionShow}">
       <view class="slider">
-        <u-slider v-model="schedule" @moving="moving" min="0" max="100" height="10" :inactive-color="theme.textColorDisable" :active-color="theme.primary"></u-slider>
+        <u-slider v-model="schedule" @input="moving" min="0" max="100" height="10" :inactive-color="theme.textColorDisable" :active-color="theme.primary"></u-slider>
       </view>
       <view class="features">
         <view class="features-list" @tap="showCatalog=true">
@@ -160,7 +161,6 @@ export default {
     },
   },
   watch:{
-
     comicList(){
       this.setRenderList()
     }
@@ -180,13 +180,14 @@ export default {
       setOrderBy: 'details/setOrderBy'
     }),
     moving(){
-      const index = parseInt(this.schedule * (this.activeList.length/100))
-      const {top,widthFixH} =  this.activeList[index]||{}
-      if(typeof top === 'number'){
-        const { windowHeight } = uni.getSystemInfoSync();
-        let scrollTop= top + widthFixH>this.totalHeight-windowHeight?this.totalHeight-windowHeight:top
-        this.scrollTop = scrollTop*this.zoom
-      }
+      this.isTouchmove=false
+        const index = parseInt(this.schedule * (this.activeList.length/100))
+        const {top,widthFixH} =  this.activeList[index]||{}
+        if(typeof top === 'number'){
+          const { windowHeight } = uni.getSystemInfoSync();
+          let scrollTop= top + widthFixH>this.totalHeight-windowHeight?this.totalHeight-windowHeight:top
+          this.scrollTop = scrollTop*this.zoom
+        }
     },
     async selectedWorks(index,closeCatalog =true){
       try {
@@ -214,12 +215,16 @@ export default {
       plus.screen.unlockOrientation();
       plus.screen.lockOrientation( this.porTrait?'portrait-primary':'landscape-primary');
     },
+    touchmove(){
+      this.isTouchmove= true
+      this.functionShow = false
+    },
     async setInverted(){
         await this.selectedWorks(this.activeIndex,false)
         this.setOrderBy(!this.inverted)
     },
     scroll(){
-      this.throttle(this.monitorScroll, 300, {immediate:true,isLastExec:true})
+      this.throttle(this.monitorScroll, 500, {immediate:true,isLastExec:true})
       this.setRenderList()
     },
     setRenderList(){
@@ -244,11 +249,13 @@ export default {
       this.renderList= dataList
     },
     //监听滚动到那个位置
-   async monitorScroll(e){
+    monitorScroll(e){
       //漫画集滚动到那一集选中
      const {parentLink,link} = this.renderList[0]||{}
      this.activeLink = parentLink
-     this.schedule = 100 / this.activeList.length * this.activeList.findIndex(v=>v.link === link)+1
+      if(this.isTouchmove){
+        this.schedule = 100 / this.activeList.length * this.activeList.findIndex(v=>v.link === link)+1
+      }
    },
     //下拉加载
   async scrollTopPer(e){
@@ -398,7 +405,7 @@ export default {
       transform: translateY(0%);
     }
     .slider{
-      padding:20rpx 100rpx 30rpx;
+      padding:30rpx 100rpx 30rpx;
 
     }
     .safe-area{
