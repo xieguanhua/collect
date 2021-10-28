@@ -8,6 +8,7 @@
         :zoom.sync="zoom"
         :scroll-top.sync="scrollTop"
         :lowerThreshold="2000"
+        @touchmove="functionShow=false"
         :refresherEnabled="refresherEnabled"
         @touchTap="functionShow=!functionShow">
         <view>
@@ -28,12 +29,15 @@
         </view>
         <scroll-view scroll-y scroll-with-animation class="detail-list-scroll">
           <u-cell-group class="details-list" :border="false">
-            <u-cell-item  :title="item.title"  v-for="(item,i) in directoryList" :key="i" :arrow="false" class="details-item" :class="{active:activeIndex===i}" :border-bottom="false"></u-cell-item>
+            <u-cell-item  :title="item.title"  v-for="(item,i) in directoryList" :key="i" :arrow="false" class="details-item" :class="{active:activeIndex===i}" :border-bottom="false" @tap="selectedWorks(i)"></u-cell-item>
           </u-cell-group>
         </scroll-view>
       </view>
     </u-popup>
     <view class="footer" :class="{show:functionShow}">
+      <view class="slider">
+        <u-slider v-model="schedule" @moving="moving" min="0" max="100" height="10" :inactive-color="theme.textColorDisable" :active-color="theme.primary"></u-slider>
+      </view>
       <view class="features">
         <view class="features-list" @tap="showCatalog=true">
           <view class="iconfont icon-mulu"></view>
@@ -46,7 +50,7 @@
       <!-- #ifdef APP-PLUS-->
         <view class="features-list" @tap="setLandscape">
           <view class="iconfont icon-shuping"></view>
-          <view>{{ landscape?"竖屏":"横屏"}}</view>
+          <view>{{ porTrait?"竖屏":"横屏"}}</view>
         </view>
       <!-- #endif-->
 
@@ -79,7 +83,8 @@ export default {
   name: "preview",
   data(){
     return {
-      landscape:true,
+      porTrait:true,//竖屏
+      schedule:0,
       statusBarHeight: systemInfo.statusBarHeight+(menuButtonInfo.height||0),
       showCatalog:false,//显示目录
       functionShow:true,//显示控制功能
@@ -137,8 +142,25 @@ export default {
       })
       return height
     },
+    activeList(){
+      const list = []
+      let top = 0
+      let init =false
+      for (let i=0;i<this.comicList.length;i++){
+        const v= this.comicList[i]
+        if(v.parentLink === this.activeLink){
+          init = true
+          list.push({...v,top})
+        }else if(init){
+          break
+        }
+        top += v.widthFixH||0
+      }
+      return list
+    },
   },
   watch:{
+
     comicList(){
       this.setRenderList()
     }
@@ -151,35 +173,51 @@ export default {
   async onLoad(data) {
     const {link} = getParams(data);
     this.activeLink =link
-    try {
-      uni.showLoading({
-        title:'加载中',
-      })
-      const list = await this.getDetail(this.activeIndex)
-      this.comicList= [...this.comicList,...list]
-    }catch (e){
-        console.error(e)
-    }finally {
-      uni.hideLoading()
-    }
+    this.selectedWorks(this.activeIndex)
   },
   methods:{
     ...mapMutations({
       setOrderBy: 'details/setOrderBy'
     }),
-    setLandscape(){
-
-      this.statusBarHeight= systemInfo.statusBarHeight+(menuButtonInfo.height||0)
-      this.landscape = plus.navigator.getOrientation() !== 0;
-      plus.screen.unlockOrientation();
-      plus.screen.lockOrientation( this.landscape?'portrait-primary':'landscape-primary');
+    moving(){
+      const index = parseInt(this.schedule * (this.activeList.length/100))
+      const {top,widthFixH} =  this.activeList[index]||{}
+      if(typeof top === 'number'){
+        const { windowHeight } = uni.getSystemInfoSync();
+        let scrollTop= top + widthFixH>this.totalHeight-windowHeight?this.totalHeight-windowHeight:top
+        this.scrollTop = scrollTop*this.zoom
+      }
     },
-    setInverted(){
-        this.comicList.reverse()
+    async selectedWorks(index){
+      try {
+        uni.showLoading({
+          title:'加载中',
+          mask:true
+        })
+        this.comicList= await this.getDetail(index)
+        this.scrollTop =0
+        this.schedule=0
+        this.showCatalog=false
+        const {link} = this.directoryList[index] ||{}
+        this.activeLink =link
+      }catch (e){
+        console.error(e)
+      }finally {
+        uni.hideLoading()
+      }
+    },
+    setLandscape(){
+      this.statusBarHeight= systemInfo.statusBarHeight+(menuButtonInfo.height||0)
+      this.porTrait = plus.navigator.getOrientation() !== 0;
+      plus.screen.unlockOrientation();
+      plus.screen.lockOrientation( this.porTrait?'portrait-primary':'landscape-primary');
+    },
+    async setInverted(){
+        this.scrollTop = 0
+        await this.selectedWorks(this.activeIndex)
         this.setOrderBy(!this.inverted)
     },
     scroll(){
-      this.functionShow=false
       this.throttle(this.monitorScroll, 300, {immediate:true,isLastExec:true})
       this.setRenderList()
     },
@@ -207,7 +245,9 @@ export default {
     //监听滚动到那个位置
    async monitorScroll(e){
       //漫画集滚动到那一集选中
-     this.activeLink = this.renderList[0].parentLink
+     const {parentLink,link} = this.renderList[0]||{}
+     this.activeLink = parentLink
+     this.schedule = 100 / this.activeList.length * this.activeList.findIndex(v=>v.link === link)+1
    },
     //下拉加载
   async scrollTopPer(e){
@@ -355,6 +395,10 @@ export default {
     transform: translateY(100%);
     &.show{
       transform: translateY(0%);
+    }
+    .slider{
+      padding:20rpx 100rpx 30rpx;
+
     }
     .safe-area{
       height: env(safe-area-inset-bottom);

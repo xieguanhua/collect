@@ -25,7 +25,7 @@
 let systemInfo = uni.getSystemInfoSync();
 export default {
   name: "zoom-scroll",
-  emits:['scrolltolower','scroll','touchTap','touchLongTap','scrolltoupper'],
+  emits:['scrolltolower','scroll','touchTap','touchLongTap','scrolltoupper','touchend','touchstart','touchmove'],
   props: {
     zoom:{
       type:Number,
@@ -201,6 +201,7 @@ export default {
       return this.scrollData
     },
     async touchend(e) {
+      this.$emit('touchend',e)
       this.isTouch = false
       const startTime = Date.now();
       const [p1] = this.start
@@ -316,6 +317,7 @@ export default {
       }
     },
     async touchmove(e) {
+      this.$emit('touchmove',e)
       clearTimeout(this.timer)
       this.isTouch = true
       const [p1, p2] = this.start
@@ -356,6 +358,7 @@ export default {
       }
     },
     async touchstart(e) {
+      this.$emit('touchstart',e)
       clearTimeout(this.timer)
       // e.preventDefault();
       this.isAnimation = false
