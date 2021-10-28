@@ -188,7 +188,7 @@ export default {
         this.scrollTop = scrollTop*this.zoom
       }
     },
-    async selectedWorks(index){
+    async selectedWorks(index,closeCatalog =true){
       try {
         uni.showLoading({
           title:'加载中',
@@ -197,7 +197,9 @@ export default {
         this.comicList= await this.getDetail(index)
         this.scrollTop =0
         this.schedule=0
-        this.showCatalog=false
+        if(closeCatalog){
+          this.showCatalog=false
+        }
         const {link} = this.directoryList[index] ||{}
         this.activeLink =link
       }catch (e){
@@ -213,8 +215,7 @@ export default {
       plus.screen.lockOrientation( this.porTrait?'portrait-primary':'landscape-primary');
     },
     async setInverted(){
-        this.scrollTop = 0
-        await this.selectedWorks(this.activeIndex)
+        await this.selectedWorks(this.activeIndex,false)
         this.setOrderBy(!this.inverted)
     },
     scroll(){
