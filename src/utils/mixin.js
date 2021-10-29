@@ -95,14 +95,13 @@ module.exports = {
         //获取视频信息
         getImageInfo(src){
             return new Promise((resolve, reject) => {
-                const { windowWidth } = uni.getSystemInfoSync();
                 uni.getImageInfo({
                     src,
                     success(e){
-                        const {width,height} = e
+                      /*  const {width,height} = e
                         const ratio = windowWidth/width
                         e.widthFixW = parseInt(width * ratio)
-                        e.widthFixH = parseInt(height * ratio)
+                        e.widthFixH = parseInt(height * ratio)*/
                         e.link = src
                         resolve(e)
                     },

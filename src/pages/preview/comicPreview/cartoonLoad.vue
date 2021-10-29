@@ -18,7 +18,6 @@
         ></image>
         <view>图片加载失败</view>
       </view>
-    <transition name="fade">
       <image
           v-show="!loading && !loadingErr"
           :src="item.link"
@@ -28,7 +27,6 @@
           @error="error"
           style="width: 100%; height:100%;"
       ></image>
-    </transition>
   </view>
 </template>
 

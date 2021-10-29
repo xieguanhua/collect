@@ -146,10 +146,12 @@ export default {
     },
     list(){
       let bottom= 0
+      const { windowWidth } = uni.getSystemInfoSync();
       return this.comicList.map(v=>{
+       const data= this.calculateImage(v,windowWidth)
         const top = bottom
-        bottom += v.widthFixH||0
-        return {...v,top,bottom}
+        bottom += data.widthFixH||0
+        return {...v,top,bottom,...data}
       })
     }
   },
@@ -172,6 +174,13 @@ export default {
     ...mapMutations({
       setOrderBy: 'details/setOrderBy'
     }),
+    calculateImage(e,winWidth){
+      const {width,height} = e
+      const ratio = winWidth/width
+      const widthFixW = parseInt(String(width * ratio))
+      const widthFixH = parseInt(String(height * ratio))
+      return {widthFixW,widthFixH}
+    },
     slider(e){
       this.onSlider =true
       this.$u.debounce(()=>{
@@ -224,6 +233,7 @@ export default {
       this.porTrait = plus.navigator.getOrientation() !== 0;
       plus.screen.unlockOrientation();
       plus.screen.lockOrientation( this.porTrait?'portrait-primary':'landscape-primary');
+       this.selectedWorks(this.activeIndex,true)
     },
     touchmove(){
       this.functionShow = false
@@ -267,8 +277,9 @@ export default {
       }
     let list  = await this.getDetail(index)
     let height = 0
+    const { windowWidth } = uni.getSystemInfoSync();
     list.forEach(v=>{
-      height += v.widthFixH||0
+      height += this.calculateImage(v,windowWidth).widthFixH||0
     })
     callback(height*this.zoom+this.scrollTop)
 
