@@ -18,6 +18,7 @@
         ></image>
         <view>图片加载失败</view>
       </view>
+    <transition name="fade">
       <image
           v-show="!loading && !loadingErr"
           :src="item.link"
@@ -27,6 +28,7 @@
           @error="error"
           style="width: 100%; height:100%;"
       ></image>
+    </transition>
   </view>
 </template>
 
@@ -79,5 +81,11 @@ text-align: center;
     width:400rpx;
   }
 
+}
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .1s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
 }
 </style>

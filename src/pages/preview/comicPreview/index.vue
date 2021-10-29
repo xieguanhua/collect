@@ -4,21 +4,19 @@
     <zoom-scroll
         @scrolltolower="scrollToLower"
         @scrolltoupper="scrollTopPer"
-
         @scroll="scroll"
         :zoom.sync="zoom"
         :scroll-top.sync="scrollTop"
         :lowerThreshold="2000"
         @touchmove="touchmove"
-        :refresherEnabled="refresherEnabled"
+        :refresherEnabled="isPrev"
         @touchTap="functionShow=!functionShow">
         <view>
           <view class="main" :style="{height:`${totalHeight}px`}">
-            <cartoon-load v-for="(l,k) in renderList" :item="l" :key="k"/>
+            <cartoon-load v-for="l in renderList" :item="l" :key="l.link"/>
           </view>
-          <u-loadmore :status="bottomStatus" :load-text="loadText" class="loadmore" v-if="comicList.length && pullEnabled"/>
+          <u-loadmore :status="bottomStatus" :load-text="loadText" class="loadmore" v-if="list.length"/>
         </view>
-
     </zoom-scroll>
     <u-popup v-model="showCatalog" mode="right" safe-area-inset-bottom>
       <view class="popup-content">
@@ -36,8 +34,12 @@
       </view>
     </u-popup>
     <view class="footer" :class="{show:functionShow}">
-      <view class="slider">
-        <u-slider v-model="schedule" @input="moving" min="0" max="100" height="10" :inactive-color="theme.textColorDisable" :active-color="theme.primary"></u-slider>
+      <view class="schedule">
+        <u-icon name="skip-back-left" size="36" class="skip" :class="{disabled:!isPrev}" @click="prev"></u-icon>
+        <view class="slider">
+          <slider v-model="schedule" @change="slider" @changing="slider" block-size="16" :active-color="theme.primary"/>
+        </view>
+        <u-icon name="skip-forward-right" size="36" class="skip" :class="{disabled:!isNext}" @click="next"></u-icon>
       </view>
       <view class="features">
         <view class="features-list" @tap="showCatalog=true">
@@ -54,7 +56,6 @@
           <view>{{ porTrait?"竖屏":"横屏"}}</view>
         </view>
       <!-- #endif-->
-
         <view class="features-list">
           <view class="iconfont icon-shangxiahuadong"></view>
           <view>卷轴</view>
@@ -130,38 +131,30 @@ export default {
     activeDetail(){
       return this.directoryList[this.activeIndex]||{}
     },
-    pullEnabled(){
-      return !!this.directoryList[this.activeIndex+1]
-    },
-    refresherEnabled(){
-      return !!this.directoryList[this.activeIndex-1]
-    },
     totalHeight(){
-      let height = 0
-      this.comicList.forEach(v=>{
-        height += v.widthFixH||0
-      })
-      return height
+      const data =this.list[ this.list.length-1]||{}
+      return data.bottom||0
     },
     activeList(){
-      const list = []
-      let top = 0
-      let init =false
-      for (let i=0;i<this.comicList.length;i++){
-        const v= this.comicList[i]
-        if(v.parentLink === this.activeLink){
-          init = true
-          list.push({...v,top})
-        }else if(init){
-          break
-        }
-        top += v.widthFixH||0
-      }
-      return list
+      return this.list.filter(v=>v.parentLink === this.activeLink)
     },
+    isNext(){
+      return !!this.directoryList[this.activeIndex+1]
+    },
+    isPrev(){
+      return !!this.directoryList[this.activeIndex-1]
+    },
+    list(){
+      let bottom= 0
+      return this.comicList.map(v=>{
+        const top = bottom
+        bottom += v.widthFixH||0
+        return {...v,top,bottom}
+      })
+    }
   },
   watch:{
-    comicList(){
+    list(){
       this.setRenderList()
     }
   },
@@ -170,7 +163,7 @@ export default {
     plus.screen.lockOrientation('portrait')
     // #endif
   },
-  async onLoad(data) {
+   onLoad(data) {
     const {link} = getParams(data);
     this.activeLink =link
     this.selectedWorks(this.activeIndex)
@@ -179,15 +172,20 @@ export default {
     ...mapMutations({
       setOrderBy: 'details/setOrderBy'
     }),
-    moving(){
-      this.isTouchmove=false
-        const index = parseInt(this.schedule * (this.activeList.length/100))
-        const {top,widthFixH} =  this.activeList[index]||{}
-        if(typeof top === 'number'){
-          const { windowHeight } = uni.getSystemInfoSync();
-          let scrollTop= top + widthFixH>this.totalHeight-windowHeight?this.totalHeight-windowHeight:top
-          this.scrollTop = scrollTop*this.zoom
-        }
+    slider(e){
+      this.onSlider =true
+      this.$u.debounce(()=>{
+        this.onSlider =false
+      }, 800)
+      const {value} = e.detail
+      const index = parseInt(String(value * ((this.activeList.length-1)/100)))
+      const {top,bottom} =  this.activeList[index]||{}
+      if(!isNaN(top)){
+        const { windowHeight } = uni.getSystemInfoSync();
+        const totalScrollTop = this.totalHeight-windowHeight
+        let scrollTop= bottom >totalScrollTop?totalScrollTop:top
+        this.scrollTop = scrollTop*this.zoom
+      }
     },
     async selectedWorks(index,closeCatalog =true){
       try {
@@ -209,6 +207,18 @@ export default {
         uni.hideLoading()
       }
     },
+    next(){
+      if(!this.isNext){
+        return
+      }
+      this.selectedWorks(this.activeIndex+1)
+    },
+    prev(){
+      if(!this.isPrev){
+        return
+      }
+      this.selectedWorks(this.activeIndex-1)
+    },
     setLandscape(){
       this.statusBarHeight= systemInfo.statusBarHeight+(menuButtonInfo.height||0)
       this.porTrait = plus.navigator.getOrientation() !== 0;
@@ -216,7 +226,6 @@ export default {
       plus.screen.lockOrientation( this.porTrait?'portrait-primary':'landscape-primary');
     },
     touchmove(){
-      this.isTouchmove= true
       this.functionShow = false
     },
     async setInverted(){
@@ -225,37 +234,27 @@ export default {
     },
     scroll(){
       this.throttle(this.monitorScroll, 500, {immediate:true,isLastExec:true})
-      this.setRenderList()
+      this.throttle(this.setRenderList, 300, {immediate:true,isLastExec:true})
     },
+    //长列表加载
     setRenderList(){
       const { windowHeight } = uni.getSystemInfoSync();
       let scrollTop = this.scrollTop<0?0:this.scrollTop/this.zoom
       if(scrollTop+windowHeight>this.totalHeight){
         scrollTop = this.totalHeight-windowHeight
       }
-      let height = 0
-      let dataList = []
-      for (let j=0;j<this.comicList.length;j++){
-        const v=this.comicList[j]
-        v.top = height
-        height += v.widthFixH||0
-        if(v.top>=scrollTop && v.top<=scrollTop+windowHeight || height>=scrollTop && height<=scrollTop+windowHeight || v.top<=scrollTop && height>= scrollTop+windowHeight){
-          dataList.push(v)
-        }else if(height>=scrollTop+windowHeight){
-          dataList.push(v)
-          break
-        }
-      }
-      this.renderList= dataList
+       const index = this.list.findIndex(v=>v.bottom>=scrollTop)
+      const slice = index - 5
+      this.renderList= this.list.slice(slice<0?0:slice,slice+10)
     },
     //监听滚动到那个位置
     monitorScroll(e){
+      let scrollTop = this.scrollTop<0?0:this.scrollTop/this.zoom
       //漫画集滚动到那一集选中
-     const {parentLink,link} = this.renderList[0]||{}
-     this.activeLink = parentLink
-      if(this.isTouchmove){
-        this.schedule = 100 / this.activeList.length * this.activeList.findIndex(v=>v.link === link)+1
-      }
+      const {parentLink,link} =this.renderList.find(v=>v.bottom >=scrollTop)||this.renderList[0]
+      this.activeLink = parentLink
+      if(this.onSlider)return
+      this.schedule = 100 / this.activeList.length * (this.activeList.findIndex(v=>v.link === link)+1)
    },
     //下拉加载
   async scrollTopPer(e){
@@ -279,9 +278,15 @@ export default {
     //上拉加载
     async scrollToLower(){
       try {
-        if(this.bottomStatus ==='loading' || this.bottomStatus ==='nomore' || !this.pullEnabled)return
+        if(this.bottomStatus ==='loading' || this.bottomStatus ==='nomore')return
         this.bottomStatus ='loading'
         const index = this.activeIndex+1
+        if(!this.isNext){
+          this.$nextTick(()=>{
+            this.bottomStatus = 'nomore'
+          })
+          return
+        }
         let list  = await this.getDetail(index)
         this.comicList= [...this.comicList,...list]
       }catch (e){
@@ -404,9 +409,20 @@ export default {
     &.show{
       transform: translateY(0%);
     }
-    .slider{
-      padding:30rpx 100rpx 30rpx;
-
+    .schedule{
+      padding:30rpx 20rpx;
+      display: flex;
+      align-items: center;
+      .slider{
+        flex: 1;
+      }
+      .skip{
+        padding:10rpx;
+        color:$uni-text-color;
+        &.disabled{
+          color:$uni-text-color-disable;
+        }
+      }
     }
     .safe-area{
       height: env(safe-area-inset-bottom);

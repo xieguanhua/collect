@@ -306,7 +306,7 @@
 			flex: 1;
 			display: flex;
 			flex-direction: column;
-
+    position: relative;
 			.tag-list-scroll {
 				max-height: 220rpx;
 				border-bottom: 1rpx solid $uni-border-color;

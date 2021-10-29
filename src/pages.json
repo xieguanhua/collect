@@ -30,7 +30,7 @@
       "path": "pages/details/index"
     },
     {
-      "path": "pages/preview/index",
+      "path": "pages/preview/comicPreview/index",
       "style": {
         "navigationStyle": "custom"
       }

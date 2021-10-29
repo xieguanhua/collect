@@ -78,7 +78,7 @@ export default {
     startRead(item){
       if(!item)return
       const {guid} = this.option
-      navigateTo(`/pages/preview/index`,{...item,guid})
+      navigateTo(this.activeTab.detailsPage,{...item,guid})
     },
    async getDetail(){
       const {detailsParams,pageUrl} = this.activeTab
