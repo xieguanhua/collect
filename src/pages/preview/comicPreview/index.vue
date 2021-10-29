@@ -175,6 +175,7 @@ export default {
       setOrderBy: 'details/setOrderBy'
     }),
     calculateImage(e,winWidth){
+      console.log(11,winWidth)
       const {width,height} = e
       const ratio = winWidth/width
       const widthFixW = parseInt(String(width * ratio))
@@ -233,7 +234,10 @@ export default {
       this.porTrait = plus.navigator.getOrientation() !== 0;
       plus.screen.unlockOrientation();
       plus.screen.lockOrientation( this.porTrait?'portrait-primary':'landscape-primary');
-       this.selectedWorks(this.activeIndex,true)
+      setTimeout(()=>{
+        this.comicList= []
+        this.selectedWorks(this.activeIndex,false)
+      },200)
     },
     touchmove(){
       this.functionShow = false
