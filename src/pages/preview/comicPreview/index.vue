@@ -244,7 +244,7 @@ export default {
     },
     scroll(){
       this.throttle(this.monitorScroll, 500, {immediate:true,isLastExec:true})
-      this.throttle(this.setRenderList, 500, {immediate:true,isLastExec:true})
+      this.throttle(this.setRenderList, 100, {immediate:true,isLastExec:true})
     },
     //长列表加载
     setRenderList(){
