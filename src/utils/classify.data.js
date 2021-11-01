@@ -71,11 +71,11 @@ const defaultList = [
             url:``,
             details:{
                 title:'.head-title-tags h1【@innerText@】',
-                author:'.author-list .author-wr【@innerText@】',
+                author:'.intro-detail-item【@innerText@】',
                 explain:'.head-info-desc【@innerText@】',
             },
             list:{
-                parentCls:'.reverse .bottom-chapter-item',
+                parentCls:'.body-inner .qy-play-list',
                 title:'.comic-info【@innerText@】',
                 link:'.chapter-link【@href@】',
                 filter:'find(.comic-cover)@$@is(.lock)@=@true'
@@ -85,11 +85,41 @@ const defaultList = [
             url:``,
             links:'.comic-pic-item .comic-pic【@attr@$@data-src@】'
         }
-
     },
     {
         type: '视频',
-        name: '腾讯视频'
+        name: '爱奇艺',
+        pageUrl: 'http://192.168.3.32:3000/',
+        detailsPage:'/pages/preview/videoResolution/index',
+        params: {
+            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=1&date=&pg_num=${pageReg}`,
+            dataType:'json',
+            list:{
+                parentCls:'data.formatData.data.content',
+                cover:'img',
+                title:'title',
+                link:'pageUrl',
+                remark:'desc',
+            }
+        },
+        detailsParams:{
+            url:``,
+            details:{
+                title:'.head-title .header-txt【@innerText@】',
+                author:'.intro-detail-item【@innerText@】',
+                explain:'.intro-detail .content-paragraph【@innerText@】',
+                updated:'.update-tip【@innerText@】'
+            },
+            list:{
+                parentCls:'.qy-episode-num',
+                link:'.select-link【@href@】',
+                title:'.select-link【@innerText@】'
+            },
+            movie:{
+                parentCls:'.play-list-item.selected',
+                title:'.des-title【@innerText@】'
+            }
+        },
     },
     {
         type: '音乐',

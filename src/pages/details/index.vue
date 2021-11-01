@@ -14,9 +14,9 @@
         </view>
         <view class="main-info">
           <view class="title">{{ option.title }}</view>
-          <view class="author">作者：{{ option.author||'-' }}</view>
+          <view class="author">{{ option.author||'-' }}</view>
           <view class="state">状态：{{ option.state||'-' }}</view>
-          <view class="updated">更新时间：{{ option.updated||'-' }}</view>
+          <view class="updated">{{ option.updated||'-' }}</view>
           <view class="see-others">查看其他源</view>
         </view>
       </view>
@@ -31,7 +31,7 @@
 
     <view class="details-main">
       <view class="details-title">
-        <view class="total-section">{{ activeTab.name }}，共有{{ list.length }}个章节</view>
+        <view class="total-section">{{ activeTab.name }}，共有{{ list.length }}个资源</view>
         <view class="sort">
           <view :class="{active:!orderBy}"  @tap="setOrderBy(false)">
             正序
@@ -83,7 +83,13 @@ export default {
    async getDetail(){
       const {detailsParams,pageUrl} = this.activeTab
       detailsParams.url = this.option.link
-      const {list=[],details}=await crawl(pageUrl,detailsParams,{showLoading:true,loadingMask:true})
+      const {list:data=[],movie=[],details}=await crawl(pageUrl,detailsParams,{showLoading:true,loadingMask:true})
+     movie.forEach(v=>{
+       if(!v.link){
+         v.link =this.option.link
+       }
+     })
+      const list =data.length?data:movie
       let isReverse=false
       for (let i=0;i<list.length;i++){
        const {title=''} =list[i]||{}
@@ -100,6 +106,7 @@ export default {
      this.reverseList.forEach(v=>{
        v.title = v.title.replace(/[\r\n]/g, "");
      })
+      details.author = details.author[0]|| details.author
       this.option = {...this.option,...details}
       uni.setStorageSync('detail',{
           ...this.option,

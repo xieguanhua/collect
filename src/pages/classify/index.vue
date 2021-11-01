@@ -143,10 +143,19 @@
         try {
           const params= this.theCrawlpParams
           params.pageNumber = this.pageNumber
-          const {tags} = await crawl(pageUrl, classIfy,this.tagRequestConfig)
+          if(classIfy){
+            try {
+              const {tags} = await crawl(pageUrl, classIfy,this.tagRequestConfig)
+              this.classIfyTags = tags
+            }catch (e){
+              if(e.errMsg === 'request:fail abort'){
+               return
+              }
+              console.error(e)
+            }
+          }
           const {list} = await crawl(pageUrl, params,this.listRequestConfig)
           this.workList = list||[]
-          this.classIfyTags = tags
         }catch (e){
           if(e.errMsg !== 'request:fail abort'){
             this.workList =[]
@@ -177,9 +186,7 @@
 				this.current = index;
 			},
      async toggleTab(index){
-        if(this.tabActive===index) {
-          return
-        }
+        if(this.tabActive===index) {return}
         this.tabActive = index
       },
       toDetails(data){
