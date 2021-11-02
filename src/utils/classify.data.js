@@ -4,7 +4,7 @@ const defaultList = [
     {
         type: '漫画',
         name: '快看漫画',
-        pageUrl: 'http://192.168.3.32:3000/',
+        pageUrl: 'http://192.168.3.32:3000/api/crawler/',
         detailsPage:'/pages/preview/comicPreview/index',
         params: {
             url:`https://www.kuaikanmanhua.com/tag/0?page=${pageReg}`,
@@ -47,7 +47,7 @@ const defaultList = [
     {
         type: '漫画',
         name: '腾讯漫画',
-        pageUrl: 'http://192.168.3.32:3000/',
+        pageUrl: 'http://192.168.3.32:3000/api/crawler/',
         detailsPage:'/pages/preview/comicPreview/index',
         params: {
             url:`https://m.ac.qq.com/category/listAll/type/na/rank/pgv?page=${pageReg}&pageSize=15`,
@@ -89,7 +89,7 @@ const defaultList = [
     {
         type: '视频',
         name: '爱奇艺',
-        pageUrl: 'http://192.168.3.32:3000/',
+        pageUrl: 'http://192.168.3.32:3000/api/crawler/',
         detailsPage:'/pages/preview/videoResolution/index',
         params: {
             url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=1&date=&pg_num=${pageReg}`,

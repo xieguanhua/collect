@@ -24,6 +24,12 @@
       }
     },
     {
+      "path": "pages/search/index",
+      "style": {
+
+      }
+    },
+    {
       "path": "pages/set/index"
     },
     {

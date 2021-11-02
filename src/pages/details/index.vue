@@ -66,6 +66,7 @@ export default {
   onLoad(data) {
     let option = getParams(data);
     this.option = option
+
     uni.setNavigationBarTitle({
       title: option.title
     })

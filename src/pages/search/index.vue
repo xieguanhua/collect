@@ -1,6 +1,6 @@
 <template>
 <view>
-  <web-view src="https://jx.parwix.com:4433/player/?url=http://www.iqiyi.com/v_z2npxf1row.html"></web-view>
+  
 </view>
 </template>
 
