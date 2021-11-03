@@ -2,10 +2,9 @@ import {guid} from '@/utils'
 const pageReg = `pageNumberReg`
 const defaultList = [
     {
-        type: '漫画',
+        routeType: 'fiction',
         name: '快看漫画',
-        pageUrl: 'http://192.168.3.32:3000/api/crawler/',
-        detailsPage:'/pages/preview/comicPreview/index',
+        pageUrl: 'http://192.168.3.32:3000/api/puppeteer/',
         params: {
             url:`https://www.kuaikanmanhua.com/tag/0?page=${pageReg}`,
             list:{
@@ -45,10 +44,9 @@ const defaultList = [
         }
     },
     {
-        type: '漫画',
+        routeType: 'fiction',
         name: '腾讯漫画',
-        pageUrl: 'http://192.168.3.32:3000/api/crawler/',
-        detailsPage:'/pages/preview/comicPreview/index',
+        pageUrl: 'http://192.168.3.32:3000/api/puppeteer/',
         params: {
             url:`https://m.ac.qq.com/category/listAll/type/na/rank/pgv?page=${pageReg}&pageSize=15`,
             list:{
@@ -75,7 +73,7 @@ const defaultList = [
                 explain:'.head-info-desc【@innerText@】',
             },
             list:{
-                parentCls:'.body-inner .qy-play-list',
+                parentCls:'.chapter-wrap-list.normal .bottom-chapter-item',
                 title:'.comic-info【@innerText@】',
                 link:'.chapter-link【@href@】',
                 filter:'find(.comic-cover)@$@is(.lock)@=@true'
@@ -87,10 +85,10 @@ const defaultList = [
         }
     },
     {
-        type: '视频',
+        routeType: 'video',
         name: '爱奇艺',
-        pageUrl: 'http://192.168.3.32:3000/api/crawler/',
-        detailsPage:'/pages/preview/videoResolution/index',
+        pageUrl: 'http://192.168.3.32:3000/api/json/',
+        pageDetailsUrl:'http://192.168.3.32:3000/api/puppeteer/',
         params: {
             url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=1&date=&pg_num=${pageReg}`,
             dataType:'json',
@@ -122,19 +120,25 @@ const defaultList = [
         },
     },
     {
-        type: '音乐',
+        routeType: 'music',
         name: '网易云'
     }
 ]
 
-
+const routes ={
+    music: '音乐',
+    video:'视频',
+    fiction:'小说',
+    cartoon:'漫画'
+}
 //读取本地配置与默认配置合并去重，默认配置优先
 const storageList =uni.getStorageSync('config')||[]
 let list = [...defaultList,...storageList]
 const hash = {};
 const newList = list.reduce((item, next)=>{
-   if(!next.guid){
-      const {guid:guidText} = storageList.find(({name,type})=>name === next.name && type === next.type)||{}
+    next.type= routes[next.routeType]
+    if(!next.guid){
+       const {guid:guidText} = storageList.find(({name,routeType})=>name === next.name && routeType === next.routeType)||{}
       next.guid = guidText ||guid()
    }
     hash[next.name] ? '' : hash[next.name] = true && item.push(next);

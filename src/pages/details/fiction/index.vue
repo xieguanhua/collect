@@ -79,12 +79,12 @@ export default {
     startRead(item){
       if(!item)return
       const {guid} = this.option
-      navigateTo(this.activeTab.detailsPage,{...item,guid})
+      navigateTo('/pages/details/fiction/preview',{...item,guid})
     },
    async getDetail(){
-      const {detailsParams,pageUrl} = this.activeTab
+      const {detailsParams,pageUrl,pageDetailsUrl} = this.activeTab
       detailsParams.url = this.option.link
-      const {list:data=[],movie=[],details}=await crawl(pageUrl,detailsParams,{showLoading:true,loadingMask:true})
+      const {list:data=[],movie=[],details}=await crawl(pageDetailsUrl||pageUrl,detailsParams,{showLoading:true,loadingMask:true})
      movie.forEach(v=>{
        if(!v.link){
          v.link =this.option.link

@@ -195,8 +195,8 @@
         this.tabActive = index
       },
       toDetails(data){
-        const {guid} = this.activeTab
-        navigateTo(`/pages/details/index`,{...data,guid})
+        const {guid,routeType} = this.activeTab
+        navigateTo(`/pages/details/${routeType}/index`,{...data,guid})
       }
 		},
     watch:{
