@@ -1,10 +1,11 @@
 import {guid} from '@/utils'
 const pageReg = `pageNumberReg`
+export const host = 'http://192.168.3.32:3000'
 const defaultList = [
     {
         routeType: 'fiction',
         name: '快看漫画',
-        pageUrl: 'http://192.168.3.32:3000/api/puppeteer/',
+        pageUrl: host +'/api/puppeteer/',
         params: {
             url:`https://www.kuaikanmanhua.com/tag/0?page=${pageReg}`,
             list:{
@@ -15,10 +16,8 @@ const defaultList = [
                 remark:'.itemFooter .author【@innerText@】',
               /*  data:{
                     link:'.itemLink【@href@】',
-                }
-                // link:'.itemLink【@javascript:return "adad"@】',//高级功能可执行js
-                // reg:'【@(.*)@】'//不传则取params.reg*/
-            },
+                }*/
+            }
         },
         classIfy:{
             url:`https://www.kuaikanmanhua.com/tag/0`,
@@ -46,7 +45,7 @@ const defaultList = [
     {
         routeType: 'fiction',
         name: '腾讯漫画',
-        pageUrl: 'http://192.168.3.32:3000/api/puppeteer/',
+        pageUrl: host +'/api/puppeteer/',
         params: {
             url:`https://m.ac.qq.com/category/listAll/type/na/rank/pgv?page=${pageReg}&pageSize=15`,
             list:{
@@ -87,11 +86,10 @@ const defaultList = [
     {
         routeType: 'video',
         name: '爱奇艺',
-        pageUrl: 'http://192.168.3.32:3000/api/json/',
-        pageDetailsUrl:'http://192.168.3.32:3000/api/puppeteer/',
+        pageUrl: host +'/api/json/',
+        pageDetailsUrl:host +'/api/puppeteer/',
         params: {
             url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=1&date=&pg_num=${pageReg}`,
-            dataType:'json',
             list:{
                 parentCls:'data.formatData.data.content',
                 cover:'img',
@@ -104,19 +102,14 @@ const defaultList = [
             url:``,
             details:{
                 title:'.head-title .header-txt【@innerText@】',
-                author:'.intro-detail-item【@innerText@】',
-                explain:'.intro-detail .content-paragraph【@innerText@】',
+                director:`script:return $('.intro-detail-item')[0].innerText`,
+                actor:`script:return $('.intro-detail-item')[1].innerText`,
+                remark:`script:return $('.intro-detail-item')[2].innerText`,
                 updated:'.update-tip【@innerText@】'
+                // score:''
             },
-            list:{
-                parentCls:'.qy-episode-num',
-                link:'.select-link【@href@】',
-                title:'.select-link【@innerText@】'
-            },
-            movie:{
-                parentCls:'.play-list-item.selected',
-                title:'.des-title【@innerText@】'
-            }
+            list:`script:return (async function aa(){ if(!$('.select-item').length){return []};function get(){return $('.select-item').map((i,v)=>{v = $(v).find('.select-link');return {link: v[0].href, title: v.text(), remark: v.attr('title')}})};await sleep(8000);let list = get();$('.bar-li').eq(1).click();function sleep(time){return new Promise(resolve => {setTimeout(resolve,time||3000)})};await sleep();return [...list,...get()]})()`,
+            // clearCache:true
         },
     },
     {

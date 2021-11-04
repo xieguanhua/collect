@@ -84,13 +84,7 @@ export default {
    async getDetail(){
       const {detailsParams,pageUrl,pageDetailsUrl} = this.activeTab
       detailsParams.url = this.option.link
-      const {list:data=[],movie=[],details}=await crawl(pageDetailsUrl||pageUrl,detailsParams,{showLoading:true,loadingMask:true})
-     movie.forEach(v=>{
-       if(!v.link){
-         v.link =this.option.link
-       }
-     })
-      const list =data.length?data:movie
+      const {list:list,details}=await crawl(pageDetailsUrl||pageUrl,detailsParams,{showLoading:true,loadingMask:true})
       let isReverse=false
       for (let i=0;i<list.length;i++){
        const {title=''} =list[i]||{}
