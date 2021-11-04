@@ -1,6 +1,6 @@
 <template>
 	<view class="classify" :style="cssTheme">
-    <navbar iconLeft="plus"  iconRight="search" title="分类" fixed/>
+    <navbar iconLeft="plus"  iconRight="search" title="分类" fixed @clickRight="search"/>
 		<view class="tabs u-border-bottom" v-show="list.length">
 			<u-tabs :list="list" :current="current" @change="change"  :active-color="theme.primary"></u-tabs>
 		</view>
@@ -107,6 +107,11 @@
       // #endif
     },
     methods: {
+      search(){
+        navigateTo(`/pages/search/index`,null,{
+          animationType:'zoom-fade-out'
+        })
+      },
       goTop() {
         this.scrollTop = 0
       },
@@ -143,10 +148,19 @@
         try {
           const params= this.theCrawlpParams
           params.pageNumber = this.pageNumber
-          const {tags} = await crawl(pageUrl, classIfy,this.tagRequestConfig)
+          if(classIfy){
+            try {
+              const {tags} = await crawl(pageUrl, classIfy,this.tagRequestConfig)
+              this.classIfyTags = tags
+            }catch (e){
+              if(e.errMsg === 'request:fail abort'){
+               return
+              }
+              console.error(e)
+            }
+          }
           const {list} = await crawl(pageUrl, params,this.listRequestConfig)
           this.workList = list||[]
-          this.classIfyTags = tags
         }catch (e){
           if(e.errMsg !== 'request:fail abort'){
             this.workList =[]
@@ -177,14 +191,12 @@
 				this.current = index;
 			},
      async toggleTab(index){
-        if(this.tabActive===index) {
-          return
-        }
+        if(this.tabActive===index) {return}
         this.tabActive = index
       },
       toDetails(data){
-        const {guid} = this.activeTab
-        navigateTo(`/pages/details/index`,{...data,guid})
+        const {guid,routeType} = this.activeTab
+        navigateTo(`/pages/details/${routeType}/index`,{...data,guid})
       }
 		},
     watch:{

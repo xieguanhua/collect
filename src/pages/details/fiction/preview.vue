@@ -233,7 +233,10 @@ export default {
       this.porTrait = plus.navigator.getOrientation() !== 0;
       plus.screen.unlockOrientation();
       plus.screen.lockOrientation( this.porTrait?'portrait-primary':'landscape-primary');
-       this.selectedWorks(this.activeIndex,true)
+      setTimeout(()=>{
+        this.comicList= []
+        this.selectedWorks(this.activeIndex,false)
+      },200)
     },
     touchmove(){
       this.functionShow = false

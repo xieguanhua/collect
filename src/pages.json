@@ -24,13 +24,22 @@
       }
     },
     {
+      "path": "pages/search/index",
+      "style": {
+
+      }
+    },
+    {
       "path": "pages/set/index"
     },
     {
-      "path": "pages/details/index"
+      "path": "pages/details/fiction/index"
     },
     {
-      "path": "pages/preview/comicPreview/index",
+      "path": "pages/details/video/index"
+    },
+    {
+      "path": "pages/details/fiction/preview",
       "style": {
         "navigationStyle": "custom"
       }

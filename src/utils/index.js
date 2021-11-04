@@ -11,7 +11,7 @@ export const guid = () => {
 /**
  * 页面跳转传参
  */
-export const navigateTo = (url,params,options)=>{
+export const navigateTo = (url,params={},options)=>{
     uni.navigateTo({
         ...options,
         url: `${url}?data=${encodeURIComponent(JSON.stringify(params))}`,
