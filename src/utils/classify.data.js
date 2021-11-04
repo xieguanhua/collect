@@ -1,6 +1,6 @@
 import {guid} from '@/utils'
 const pageReg = `pageNumberReg`
-export const host = 'http://192.168.3.32:3000'
+export const host = 'http://192.168.0.103:3000'
 const defaultList = [
     {
         routeType: 'fiction',
@@ -89,7 +89,7 @@ const defaultList = [
         pageUrl: host +'/api/json/',
         pageDetailsUrl:host +'/api/puppeteer/',
         params: {
-            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=1&date=&pg_num=${pageReg}`,
+            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=2&date=&pg_num=${pageReg}`,
             list:{
                 parentCls:'data.formatData.data.content',
                 cover:'img',
@@ -108,7 +108,7 @@ const defaultList = [
                 updated:'.update-tip【@innerText@】'
                 // score:''
             },
-            list:`script:return (async function aa(){ if(!$('.select-item').length){return []};function get(){return $('.select-item').map((i,v)=>{v = $(v).find('.select-link');return {link: v[0].href, title: v.text(), remark: v.attr('title')}})};await sleep(8000);let list = get();$('.bar-li').eq(1).click();function sleep(time){return new Promise(resolve => {setTimeout(resolve,time||3000)})};await sleep();return [...list,...get()]})()`,
+            list:`script:return (async function aa(){ if(!$('.select-item').length){return []};function get(){return $('.select-item').map((i,r)=>{const v = $(r).find('.select-link');return {link: v[0].href,mark:($(r).find('img')[0]||{}).src, title: v.text(), remark: v.attr('title')}})};await sleep(8000);let list = get();$('.bar-li').eq(1).click();function sleep(time){return new Promise(resolve => {setTimeout(resolve,time||3000)})};await sleep();return [...list,...get()]})()`,
             // clearCache:true
         },
     },

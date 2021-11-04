@@ -31,6 +31,7 @@
       <scroll-view scroll-x>
         <view v-for="(item,i) in playlist" :key="i" class="collect">
           {{item.title}}
+          <image :src="item.mark" class="mark"  mode="heightFix"></image>
         </view>
       </scroll-view>
     </view>
@@ -157,11 +158,13 @@ export default {
       }
     }
     .playlist-main{
+      padding: 20rpx 0;
       white-space:nowrap;
-      padding:20rpx 0;
       .collect{
+        margin:20rpx 0;
         font-size:24rpx;
         border-radius: 6rpx;
+        position: relative;
         display: inline-block;
         width:80rpx;
         height:80rpx;
@@ -172,6 +175,14 @@ export default {
         &.active{
           color: $uni-color-primary;
         }
+      }
+      .mark{
+        height: 24rpx;
+        position: absolute;
+        top:0;
+        right:0;
+        z-index: 1;
+
       }
     }
   }
