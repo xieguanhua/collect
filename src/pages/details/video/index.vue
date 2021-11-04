@@ -1,7 +1,7 @@
 <template>
   <view class="analysis-video" :style="cssTheme">
     <view class="video" :style="videoStyle">
-      <video :src="playUrl"  class="video-main" v-if="playUrl"></video>
+      <video :src="playUrl"  class="video-main" v-if="playUrl" autoplay></video>
       <web-view :src="playIframeUrl" :style="videoStyle"  v-else></web-view>
     </view>
 
@@ -92,7 +92,7 @@ export default {
       this.playlist = list||[]
     },
    async getVideo(){
-     // #ifdef MP-WEIXIN || MP-ALIPAY || App
+     // #ifdef MP-WEIXIN || MP-ALIPAY || APP-PLUS
      const url = `https://json.pangujiexi.com:12345/json.php?url=${this.option.link}`
      const {playPath} = await agentRequests({url,playPath:'url'},{
        showLoading: true,
