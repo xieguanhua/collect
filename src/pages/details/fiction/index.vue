@@ -101,7 +101,6 @@ export default {
      this.reverseList.forEach(v=>{
        v.title = v.title.replace(/[\r\n]/g, "");
      })
-      details.author = details.author[0]|| details.author
       this.option = {...this.option,...details}
       uni.setStorageSync('detail',{
           ...this.option,

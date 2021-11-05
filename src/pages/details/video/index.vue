@@ -1,8 +1,8 @@
 <template>
   <view class="analysis-video" :style="cssTheme">
     <view class="video" :style="videoStyle">
-      <video :src="playUrl"  class="video-main" v-if="playUrl" autoplay></video>
-      <web-view :src="playIframeUrl" :style="videoStyle"  v-else></web-view>
+      <video :src="playUrl"  class="video-main" v-if="playUrl && !showPlay" autoplay  :initial-time="initialTime" @timeupdate="timeupdate" :play-strategy="3"></video>
+      <web-view :src="playIframeUrl" :style="videoStyle"  v-else-if="!showPlay"></web-view>
     </view>
 
  <view class="info">
@@ -29,7 +29,7 @@
      </view>
     <view class="playlist-main">
       <scroll-view scroll-x>
-        <view v-for="(item,i) in playlist" :key="i" class="collect">
+        <view v-for="(item,i) in playlist" :key="i" class="collect" :class="{active:i === activeIndex}" @tap="togglePlay(item)">
           {{item.title}}
           <image :src="item.mark" class="mark"  mode="heightFix"></image>
         </view>
@@ -63,9 +63,12 @@ export default {
   name: "index",
   data(){
     return {
-      videoStyle:{width:'100vw',height:'calc(100vw * 0.5625)'},
+      videoStyle:{width:'100vw',height:'calc(100vw * 0.5625)',background:'black'},
+      showPlay:false,
+      activePlayLink:'',
       playUrl:'',
       playIframeUrl:'',
+      initialTime:0,
       option: {},
       playlist:[]
     }
@@ -76,12 +79,26 @@ export default {
     uni.setNavigationBarTitle({
       title: option.title
     })
+    //读取播放记录，没有则去传递过来的
+    const recordCache = this.recordCache[this.activeTab.name]||{}
+    this.activePlayLink =recordCache[option.title]|| option.link
     this.getDetail()
-    this.getVideo()
   },
-  components:{
+  watch:{
+    activePlayLink(){
+      this.getVideo()
+    }
   },
   methods: {
+    ...mapMutations({
+      setRecordCache: 'recordCache/setRecordCache'
+    }),
+    togglePlay(item){
+      if(this.activePlayLink === item.link||!item.link){
+        return
+      }
+      this.activePlayLink = item.link
+    },
     async getDetail() {
       const {detailsParams, pageUrl, pageDetailsUrl} = this.activeTab
       detailsParams.url = this.option.link
@@ -93,25 +110,39 @@ export default {
       this.playlist = list||[]
     },
    async getVideo(){
+      const link = this.activePlayLink
      // #ifdef MP-WEIXIN || MP-ALIPAY || APP-PLUS
-     const url = `https://json.pangujiexi.com:12345/json.php?url=${this.option.link}`
-     const {playPath} = await agentRequests({url,playPath:'url'},{
-       showLoading: true,
-       loadingMask: true
-     })
+     this.showPlay =true
+     const url = `https://json.pangujiexi.com:12345/json.php?url=${link}`
+     const {playPath} = await agentRequests({url,playPath:'url'},{loadingMask: true})
      this.playUrl = playPath
      // #endif
-     this.playIframeUrl = `https://www.pangujiexi.com/pangu/?url=${this.option.link}`
+     this.playIframeUrl = `https://www.pangujiexi.com/pangu/?url=${link}`
+     this.setRecordCache({
+       type:this.activeTab.name,
+       name:this.option.title,
+       link:this.activePlayLink
+     })
+     this.initialTime = uni.getStorageSync(this.playUrl)||0
+     this.showPlay =false
+   },
+    //播放时间更新
+    timeupdate(e){
+      uni.setStorageSync(this.playUrl,e.target.currentTime)
     }
   },
   computed: {
     ...mapGetters({
-      orderBy: 'details/orderBy',
-      classifyArr: 'details/classifyArr'
+      classifyArr: 'details/classifyArr',
+      recordCache:'recordCache/recordCache'
     }),
     activeTab() {
       return this.classifyArr.find(({guid}) => guid === this.option.guid) || {}
     },
+    activeIndex(){
+      const index = this.playlist.findIndex(v=>v.link === this.activePlayLink)
+     return index<0?0:index
+    }
   }
 }
 </script>
@@ -161,12 +192,13 @@ export default {
       padding: 20rpx 0;
       white-space:nowrap;
       .collect{
+        padding:0 10rpx;
         margin:20rpx 0;
         font-size:24rpx;
         border-radius: 6rpx;
         position: relative;
         display: inline-block;
-        width:80rpx;
+        min-width:80rpx;
         height:80rpx;
         line-height:80rpx;
         margin-right:20rpx;

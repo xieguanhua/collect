@@ -1,9 +1,10 @@
+//主题色设置
 export default {
     namespaced: true,
     state:{
         mainColor:uni.getStorageSync('color') || {
             /* 行为相关颜色 */
-            primary:'#f0ad4e',
+            primary:'#007aff',
             success:'#4cd964',
             warning:'#f0ad4e',
             error:'#dd524d',
