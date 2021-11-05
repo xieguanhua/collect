@@ -144,7 +144,7 @@
         this.goTop()
         this.pageNumber=1
         this.loading = true
-        const {pageUrl,classIfy} = this.activeTab
+        const {pageUrl,classIfy,tags} = this.activeTab
         try {
           const params= this.theCrawlpParams
           params.pageNumber = this.pageNumber
@@ -158,6 +158,8 @@
               }
               console.error(e)
             }
+          }else if(tags){
+            this.classIfyTags = tags
           }
           const {list} = await crawl(pageUrl, params,this.listRequestConfig)
           this.workList = list||[]

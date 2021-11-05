@@ -1,6 +1,6 @@
 import {guid} from '@/utils'
 const pageReg = `pageNumberReg`
-export const host = 'http://192.168.0.103:3000'
+export const host = 'http://192.168.3.32:3000'
 const defaultList = [
     {
         routeType: 'fiction',
@@ -88,8 +88,54 @@ const defaultList = [
         name: '爱奇艺',
         pageUrl: host +'/api/json/',
         pageDetailsUrl:host +'/api/puppeteer/',
+        tags:[
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=-1&date=&pg_num=1",
+                innerText: "总榜"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=2&date=&pg_num=1",
+                innerText: "电视剧"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=1&date=&pg_num=1",
+                innerText: "电影"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=6&date=&pg_num=1",
+                innerText: "综艺"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=4&date=&pg_num=1",
+                innerText: "动漫"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=15&date=&pg_num=1",
+                innerText: "儿童"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=3&date=&pg_num=1",
+                innerText: "纪录片"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=-7&date=&pg_num=1",
+                innerText: "说唱"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=12&date=&pg_num=1",
+                innerText: "教育"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=912&date=&pg_num=1",
+                innerText: "知识"
+            },
+            {
+                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=17&date=&pg_num=1",
+                innerText: "体育"
+            }
+        ],
         params: {
-            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=2&date=&pg_num=${pageReg}`,
+            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&date=&pg_num=${pageReg}`,
             list:{
                 parentCls:'data.formatData.data.content',
                 cover:'img',
@@ -102,14 +148,13 @@ const defaultList = [
             url:``,
             details:{
                 title:'.head-title .header-txt【@innerText@】',
-                director:`script:return $('.intro-detail-item')[0].innerText`,
-                actor:`script:return $('.intro-detail-item')[1].innerText`,
-                remark:`script:return $('.intro-detail-item')[2].innerText`,
+                director:`script:return ($('.intro-detail-item')[0]||{}).innerText`,
+                actor:`script:return ($('.intro-detail-item')[1]||{}).innerText`,
+                remark:`script:return ($('.intro-detail-item')[2]||{}).innerText`,
                 updated:'.update-tip【@innerText@】'
                 // score:''
             },
-            list:`script:return (async function aa(){ if(!$('.select-item').length){return []};function get(){return $('.select-item').map((i,r)=>{const v = $(r).find('.select-link');return {link: v[0].href,mark:($(r).find('img')[0]||{}).src, title: v.text(), remark: v.attr('title')}})};await sleep(8000);let list = get();$('.bar-li').eq(1).click();function sleep(time){return new Promise(resolve => {setTimeout(resolve,time||3000)})};await sleep();return [...list,...get()]})()`,
-            // clearCache:true
+            list:`script:return (async function aa() {if (!$('.select-item').length) {return [];};function sleep(time= 3000) {return new Promise(resolve => {setTimeout(resolve, time);})};await sleep(8000);async function get() {await sleep();return $('.select-item').map((i, r) => {const v = $(r).find('.select-link');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text(), remark: v.attr('title')}})};let list =[];async function recursion(index =0){const dom = $('.bar-li,.popup-li');const d = dom.eq(index);if(d.length && !d.hasClass('more-li')){d.click();list =[...list,...(await get())];}dom.length>++index && await recursion(index);}await recursion();return list;})()`,
         },
     },
     {

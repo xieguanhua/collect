@@ -16,7 +16,7 @@ export default class Request {
             //请求的baseUrl
             baseURL: '',
             //loading超时时间
-            timeOut: 60000,
+            timeOut: 240000,//4分钟
             //请求头
             header: {},
             //loading动画
