@@ -39,6 +39,9 @@
       "path": "pages/details/video/index"
     },
     {
+      "path": "pages/details/video/webPage"
+    },
+    {
       "path": "pages/details/fiction/preview",
       "style": {
         "navigationStyle": "custom"
