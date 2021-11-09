@@ -26,7 +26,11 @@
     {
       "path": "pages/search/index",
       "style": {
-
+        "navigationStyle": "custom",
+        "app-plus":{
+          "softinputMode": "adjustResize",
+          "softinputNavBar":"none"
+        }
       }
     },
     {

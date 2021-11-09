@@ -1,11 +1,67 @@
 import {guid} from '@/utils'
 const pageReg = `pageNumberReg`
 export const host = 'http://192.168.3.32:3000'
+const puppeteerApi = host +'/api/puppeteer/'
+const jsonApi = host +'/api/json/'
+const routes ={
+    all:'全部',
+    music: '音乐',
+    video:'视频',
+    fiction:'小说',
+    cartoon:'漫画'
+}
+ const fuzzySearchList =[
+    {
+        routeType: 'cartoon',
+        pageUrl: puppeteerApi,
+        pageJsonUrl:jsonApi,
+        requestURL:{
+            url:`https://m.ac.qq.com/search/smart?word=keyReg`,
+            list:{
+                parentCls:'data',
+                text:'title',
+            }
+        },
+        hotSearch: {
+            url:`https://m.ac.qq.com/search/index`,
+            list:{
+                parentCls:'.search-hot-list .item',
+                text:'.link【@innerText@】'
+            }
+
+        }
+    },
+    {
+        routeType: 'video',
+        pageUrl: puppeteerApi,
+        pageJsonUrl:jsonApi,
+        requestURL:{
+            url:`https://s.video.qq.com/smt_wap?ver=3&num=10&otype=json&query=keyReg`,
+            jsonpName:'QZOutputJson',
+            list:{
+                parentCls:'item',
+                text:'word',
+            }
+        },
+        hotJsonSearch: {
+            url:`https://node.video.qq.com/x/api/hot_mobilesearch?channdlId=0&_=1636430562511`,
+            list:{
+                parentCls:'data.itemList',
+                text:'title'
+            }
+
+        }
+    }
+]
+fuzzySearchList.forEach(v=>{
+    v.type = routes[v.routeType]
+})
+export {fuzzySearchList}
 const defaultList = [
     {
-        routeType: 'fiction',
+        routeType: 'cartoon',
         name: '快看漫画',
-        pageUrl: host +'/api/puppeteer/',
+        pageUrl: puppeteerApi,
         params: {
             url:`https://www.kuaikanmanhua.com/tag/0?page=${pageReg}`,
             list:{
@@ -43,9 +99,9 @@ const defaultList = [
         }
     },
     {
-        routeType: 'fiction',
+        routeType: 'cartoon',
         name: '腾讯漫画',
-        pageUrl: host +'/api/puppeteer/',
+        pageUrl: puppeteerApi,
         params: {
             url:`https://m.ac.qq.com/category/listAll/type/na/rank/pgv?page=${pageReg}&pageSize=15`,
             list:{
@@ -86,8 +142,8 @@ const defaultList = [
     {
         routeType: 'video',
         name: '爱奇艺',
-        pageUrl: host +'/api/json/',
-        pageDetailsUrl:host +'/api/puppeteer/',
+        pageUrl: jsonApi,
+        pageDetailsUrl:puppeteerApi,
         tags:[
             {
                 href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=-1&date=&pg_num=1",
@@ -163,12 +219,7 @@ const defaultList = [
     }
 ]
 
-const routes ={
-    music: '音乐',
-    video:'视频',
-    fiction:'小说',
-    cartoon:'漫画'
-}
+
 //读取本地配置与默认配置合并去重，默认配置优先
 const storageList =uni.getStorageSync('config')||[]
 let list = [...defaultList,...storageList]
@@ -183,4 +234,7 @@ const newList = list.reduce((item, next)=>{
     return item;
 },[])
 uni.setStorageSync('config',newList)
+
+
+
 export default newList

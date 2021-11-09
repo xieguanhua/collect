@@ -44,13 +44,13 @@
 
    <view class="video-info">
      <view class="director">
-       {{option.director }}
+       {{option.director||'' }}
      </view>
      <view class="actor">
-       {{option.actor }}
+       {{option.actor ||''}}
      </view>
      <view class="remark">
-       {{option.remark }}
+       {{option.remark ||''}}
      </view>
    </view>
  </view>

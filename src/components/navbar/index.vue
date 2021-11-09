@@ -4,7 +4,7 @@
       <view class="status-bar" :style="{height: statusBarHeight + 'px' }"></view>
       <view class="navbar-inner">
 
-        <view class="left">
+        <view class="left" v-if="showLeft">
           <slot name="left">
             <u-icon :name="iconLeft" :size="iconSize" :style="{right:`${rightButtonWidth}px`}" @tap="goBack"></u-icon>
           </slot>
@@ -12,7 +12,7 @@
 
         <slot><text class="title">{{ title }}</text></slot>
 
-        <view class="right">
+        <view class="right" v-if="showRight">
           <slot name="right">
             <u-icon :name="iconRight" :size="iconSize" :style="{right:`${rightButtonWidth}px`}" @tap="onClickRight"></u-icon>
           </slot>
@@ -34,6 +34,14 @@ export default {
   name: "index",
   emits:['clickRight'],
   props:{
+    showLeft:{
+      type: Boolean,
+      default: true
+    },
+    showRight:{
+      type: Boolean,
+      default: true
+    },
     title:{
       type: String,
       default: ""

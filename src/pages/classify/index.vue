@@ -108,8 +108,11 @@
     },
     methods: {
       search(){
-        navigateTo(`/pages/search/index`,null,{
-          animationType:'zoom-fade-out'
+        navigateTo(`/pages/search/index`, {
+          routeType:this.activeTab.routeType
+        },{
+          animationType:'zoom-fade-out',
+          animationDuration:100,
         })
       },
       goTop() {
