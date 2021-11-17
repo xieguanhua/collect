@@ -94,6 +94,16 @@ const defaultList = [
         previewParams:{
             url:``,
             links:'.imgList .img【@attr@$@data-src@】'
+        },
+        searchParams:{
+            url:'https://www.kuaikanmanhua.com/sou/keyReg',
+            list:{
+                parentCls:'.resultList>.fl',
+                cover:'.imgBox .img【@attr@$@data-src@】',//使用jquery获取dom属性,attr,text等等
+                title:'.itemTitle【@innerText@】',
+                link:'.link【@href@】',
+                remark:'.author【@innerText@】',
+            }
         }
     },
     {
@@ -219,6 +229,18 @@ const defaultList = [
             },
             list:`script:return (async function aa() {if (!$('.select-item').length) {return [];};function sleep(time= 3000) {return new Promise(resolve => {setTimeout(resolve, time);})};await sleep(8000);async function get() {await sleep();return $('.select-item').map((i, r) => {const v = $(r).find('.select-link');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text(), remark: v.attr('title')}})};let list =[];async function recursion(index =0){const dom = $('.bar-li,.popup-li');const d = dom.eq(index);if(d.length && !d.hasClass('more-li')){d.click();list =[...list,...(await get())];}dom.length>++index && await recursion(index);}await recursion();return list;})()`,
         },
+        searchParams:{
+            clearCache:true,
+            url:'https://m.iqiyi.com/search.html?source=input&key=keyReg',
+            list:{
+                parentCls:'.m-box-items>.m-pic-text',
+                cover: `script:return data.find('.piclist-img a').css("background-image").split("\\"")[1]`,
+                title:'.c-title【@innerText@】',
+                link:'.piclist-link【@href@】',
+                remark:'.c-info【@innerText@】',
+                updated:`script:return data.find('.c-info').eq(2).text()`,
+            }
+        }
     },
     {
         routeType: 'music',
