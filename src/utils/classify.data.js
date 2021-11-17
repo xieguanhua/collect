@@ -208,7 +208,7 @@ const defaultList = [
         ],
         params: {
             requestPageUrl: jsonApi,
-            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&date=&category_id=-1&pg_num=${pageReg}`,
+            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&date=&pg_num=${pageReg}`,
             list:{
                 parentCls:'data.formatData.data.content',
                 cover:'img',
@@ -230,15 +230,14 @@ const defaultList = [
             list:`script:return (async function aa() {if (!$('.select-item').length) {return [];};function sleep(time= 3000) {return new Promise(resolve => {setTimeout(resolve, time);})};await sleep(8000);async function get() {await sleep();return $('.select-item').map((i, r) => {const v = $(r).find('.select-link');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text(), remark: v.attr('title')}})};let list =[];async function recursion(index =0){const dom = $('.bar-li,.popup-li');const d = dom.eq(index);if(d.length && !d.hasClass('more-li')){d.click();list =[...list,...(await get())];}dom.length>++index && await recursion(index);}await recursion();return list;})()`,
         },
         searchParams:{
-            clearCache:true,
-            url:'https://m.iqiyi.com/search.html?source=input&key=keyReg',
+            url:'https://so.iqiyi.com/so/q_keyReg_ctg__t_0_page_1_p_1_qc_0_rd__site_iqiyi_m_1_bitrate__af_0',
             list:{
-                parentCls:'.m-box-items>.m-pic-text',
-                cover: `script:return data.find('.piclist-img a').css("background-image").split("\\"")[1]`,
-                title:'.c-title【@innerText@】',
-                link:'.piclist-link【@href@】',
-                remark:'.c-info【@innerText@】',
-                updated:`script:return data.find('.c-info').eq(2).text()`,
+                parentCls:'.vertical-pic',
+                cover:'.qy-mod-link img【@src@】',
+                title:'.main-tit【@innerText@】',
+                link: `script:return (data.find('.album-item a')[0] || data.find('.qy-mod-link')[0]||{}).href`,
+                updated:`script:return data.find('.qy-search-result-info').eq(5).text()`,
+                remark:`.multiple .info-des【@innerText@】`,
             }
         }
     },

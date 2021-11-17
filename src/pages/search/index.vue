@@ -46,7 +46,7 @@
 
 
     <view v-else>
-      <view class="info-detail" v-for="(item,i) in searchList"  :key="i">
+      <view class="info-detail" v-for="(item,i) in searchList"  :key="i" @tap="toDetails(item)">
         <view class="cover">
           <u-image
               :src="item.cover"
@@ -74,7 +74,7 @@
 <script>
 import navbar from '@/components/navbar'
 import {fuzzySearchList} from '@/utils/classify.data'
-import {getParams} from '@/utils'
+import {getParams,navigateTo} from '@/utils'
 import {mapGetters} from 'vuex'
 import {
   crawl
@@ -105,6 +105,11 @@ export default {
     navbar
   },
   methods: {
+    toDetails(data){
+      const {guid,routeType} = this.classifyArr.find(v=>v.routeType === data.routeType && data.name === v.name)||{}
+      if(!routeType)return
+      navigateTo(`/pages/details/${routeType}/index`,{...data,guid})
+    },
     cancel() {
       uni.navigateBack();
     },
