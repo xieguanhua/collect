@@ -85,6 +85,8 @@ export default {
     return {
       value:'',
       fuzzySearchList,
+      fuzzyRequest:{},
+      isQueryRequest:false,
       searchActiveType: '',//选中搜索类型
       showPicker: false,//显示搜索类型
       hotList:[],//热门推荐
@@ -148,8 +150,10 @@ export default {
           this.fuzzyQueryList= []
           return
         }
+        if(this.isQueryRequest)return
+        this.abort(this.fuzzyRequest)
         params.url = params.url.replace('keyReg',this.value)
-        let {list} =  await crawl(pageJsonUrl,params)
+        let {list} =  await crawl(pageJsonUrl,params,this.fuzzyRequest)
         if(list){
            this.fuzzyQueryList=list
          }
@@ -159,46 +163,59 @@ export default {
        this.searchList=[]
       }
     },
+    abort({request}={}){
+      request && request.abort()
+    },
     async queryList(val=''){
-      val = val.replace(/(^\s*)|(\s*$)/g, "")
-      if(!val){
-        return
+      try {
+        val = val.replace(/(^\s*)|(\s*$)/g, "")
+        if(!val|| this.isQueryRequest){
+          return
+        }
+        this.isQueryRequest =true
+        this.abort(this.fuzzyRequest)
+        this.value = val
+        const type= this.searchActiveType //当前选择的类型
+        const historyData ={...this.historyData}
+        const historyList = this.historyList
+        //数据去重并插入
+        const index = historyList.indexOf(val)
+        index>=0&& historyList.splice(index,1)
+        historyList.unshift(val)
+        historyData[type] = historyList
+        this.historyData= historyData//更新数据
+        uni.setStorageSync('search',historyData)//历史列表存储
+        const classList = this.classifyArr.filter(v=>v.routeType === type && v.searchParams)
+        const classSearchList = (await Promise.all(classList.map(async v => {
+          try {
+            const params={...v.searchParams}
+            params.url =params.url.replace('keyReg', val)
+            const {list} = await crawl(v.requestPageUrl, params)
+            list.forEach(r => {
+              r.name = v.name
+              r.routeType = v.routeType
+              let num = [];
+              for (let y = 0; y <= val.length; y++) {
+                if (r.title.indexOf(val[y]) >= 0) {
+                  ++num
+                }
+              }
+              r.ratio = num / r.title.length
+            })
+            return list
+          } catch (e) {
+            return Promise.resolve([])
+          }
+        }))).flat()
+        classSearchList.sort((a,b)=>{return b.ratio-a.ratio});
+        this.searchList = classSearchList
+      }catch (e){
+        console.error(e)
+      }finally {
+        this.$u.debounce(()=>{
+          this.isQueryRequest =false
+        }, 300)
       }
-      this.value = val
-      const type= this.searchActiveType //当前选择的类型
-      const historyData ={...this.historyData}
-      const historyList = this.historyList
-      //数据去重并插入
-      const index = historyList.indexOf(val)
-      index>=0&& historyList.splice(index,1)
-      historyList.unshift(val)
-      historyData[type] = historyList
-      this.historyData= historyData//更新数据
-      uni.setStorageSync('search',historyData)//历史列表存储
-      const classList = this.classifyArr.filter(v=>v.routeType === type && v.searchParams)
-       const classSearchList = (await Promise.all(classList.map(async v => {
-         try {
-           const params={...v.searchParams}
-           params.url =params.url.replace('keyReg', val)
-           const {list} = await crawl(v.requestPageUrl, params)
-           list.forEach(r => {
-             r.name = v.name
-             r.routeType = v.routeType
-             let num = [];
-             for (let y = 0; y <= val.length; y++) {
-               if (r.title.indexOf(val[y]) >= 0) {
-                 ++num
-               }
-             }
-             r.ratio = num / r.title.length
-           })
-           return list
-         } catch (e) {
-           return Promise.resolve([])
-         }
-       }))).flat()
-      classSearchList.sort((a,b)=>{return b.ratio-a.ratio});
-      this.searchList = classSearchList
     }
   },
   watch: {
@@ -207,6 +224,16 @@ export default {
         this.getHostList()
       },
       deep: true
+    },
+    isQueryRequest(v){
+      if(v){
+        uni.showLoading({
+          title:'加载中',
+          mask:true
+        })
+      }else{
+        uni.hideLoading()
+      }
     }
   },
   computed: {
