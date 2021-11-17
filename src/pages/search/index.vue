@@ -93,7 +93,6 @@ export default {
       historyData:uni.getStorageSync('search')|| {},//历史列表
       unfold:false,
       fuzzyQueryList:[],
-
       searchList:[],
     }
   },
@@ -175,6 +174,11 @@ export default {
       try {
         val = val.replace(/(^\s*)|(\s*$)/g, "")
         if(!val|| this.isQueryRequest){
+          !val && uni.showToast({
+            icon:'none',
+            title: '搜索内容不能为空',
+            position:'bottom'
+          });
           return
         }
         this.isQueryRequest =true

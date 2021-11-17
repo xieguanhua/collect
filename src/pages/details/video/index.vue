@@ -22,10 +22,10 @@
        <view class="score">{{option.score }}</view>
      </view>
    </view>
-   <view class="playlist" v-if="playlist.length">
+   <view class="playlist">
      <view class="playlist-title">
        <view class="anthology">
-         <view>选集</view>
+         <view>{{ playlist.length?'选集':'' }}</view>
         <view>
           <u-button @click="showSelect = true" size="mini">{{ activeSource.name }}解析</u-button>
         </view>
