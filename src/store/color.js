@@ -13,7 +13,7 @@ export default {
             /* 背景颜色 */
             bgColor:'#ffffff',//基本色
             /* 边框颜色 */
-            borderColor:'#ebebeb'
+            borderColor:'#f1f1f1'
         },
         makeColor:uni.getStorageSync('makeColor') || {
             // textColorInverse:'#ffffff',//反色

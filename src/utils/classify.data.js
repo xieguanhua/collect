@@ -1,8 +1,8 @@
 import {guid} from '@/utils'
 const pageReg = `pageNumberReg`
 export const host = 'http://192.168.3.32:3000'
-const puppeteerApi = host +'/api/puppeteer/'
-const jsonApi = host +'/api/json/'
+export const puppeteerApi = host +'/api/puppeteer/'
+export const jsonApi = host +'/api/json/'
 const routes ={
     all:'全部',
     music: '音乐',
@@ -13,9 +13,8 @@ const routes ={
  const fuzzySearchList =[
     {
         routeType: 'cartoon',
-        pageUrl: puppeteerApi,
-        pageJsonUrl:jsonApi,
         requestURL:{
+            requestPageUrl:jsonApi,
             url:`https://m.ac.qq.com/search/smart?word=keyReg`,
             list:{
                 parentCls:'data',
@@ -33,17 +32,17 @@ const routes ={
     },
     {
         routeType: 'video',
-        pageUrl: puppeteerApi,
-        pageJsonUrl:jsonApi,
         requestURL:{
-            url:`https://s.video.qq.com/smt_wap?ver=3&num=10&otype=json&query=keyReg`,
+            requestPageUrl:jsonApi,
             jsonpName:'QZOutputJson',
+            url:`http://s.video.qq.com/smt_wap?ver=3&num=10&otype=json&query=keyReg`,
             list:{
                 parentCls:'item',
                 text:'word',
             }
         },
-        hotJsonSearch: {
+        hotSearch: {
+            requestPageUrl:jsonApi,
             url:`https://node.video.qq.com/x/api/hot_mobilesearch?channdlId=0&_=1636430562511`,
             list:{
                 parentCls:'data.itemList',
@@ -61,7 +60,6 @@ const defaultList = [
     {
         routeType: 'cartoon',
         name: '快看漫画',
-        pageUrl: puppeteerApi,
         params: {
             url:`https://www.kuaikanmanhua.com/tag/0?page=${pageReg}`,
             list:{
@@ -101,7 +99,6 @@ const defaultList = [
     {
         routeType: 'cartoon',
         name: '腾讯漫画',
-        pageUrl: puppeteerApi,
         params: {
             url:`https://m.ac.qq.com/category/listAll/type/na/rank/pgv?page=${pageReg}&pageSize=15`,
             list:{
@@ -137,13 +134,22 @@ const defaultList = [
         previewParams:{
             url:``,
             links:'.comic-pic-item .comic-pic【@attr@$@data-src@】'
+        },
+        searchParams:{
+            url:'https://m.ac.qq.com/search/result?word=keyReg',
+            list:{
+                parentCls:'.comic-item',
+                cover:'.cover-image【@src@】',
+                title:'.comic-title【@innerText@】',
+                link:'.comic-link【@href@】',
+                remark:'.comic-desc【@innerText@】',
+                updated:'.comic-update【@innerText@】',
+            }
         }
     },
     {
         routeType: 'video',
         name: '爱奇艺',
-        pageUrl: jsonApi,
-        pageDetailsUrl:puppeteerApi,
         tags:[
             {
                 href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=-1&date=&pg_num=1",
@@ -191,7 +197,8 @@ const defaultList = [
             }
         ],
         params: {
-            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&date=&pg_num=${pageReg}`,
+            requestPageUrl: jsonApi,
+            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&date=&category_id=-1&pg_num=${pageReg}`,
             list:{
                 parentCls:'data.formatData.data.content',
                 cover:'img',

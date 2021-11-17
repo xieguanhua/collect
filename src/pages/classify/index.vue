@@ -201,6 +201,7 @@
       },
       toDetails(data){
         const {guid,routeType} = this.activeTab
+        console.log(`/pages/details/${routeType}/index`)
         navigateTo(`/pages/details/${routeType}/index`,{...data,guid})
       }
 		},

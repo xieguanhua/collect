@@ -7,7 +7,7 @@
           <u-icon name="arrow-down" size="20"></u-icon>
         </view>
         <u-icon name="search" size="34" class="search-icon"></u-icon>
-        <view class="input"><input confirm-type="search" type="text" focus @input="input" v-model="value"></view>
+        <view class="input"><input confirm-type="search" type="text" focus @input="input" v-model="value" @confirm="confirm"></view>
         <view class="cancel" @click="cancel">
           <text>取消</text>
         </view>
@@ -15,15 +15,15 @@
     </navbar>
 
     <!--热门推荐与历史搜索-->
-    <view class="record">
+    <view class="record" v-if="!fuzzyQueryList.length && !searchList.length">
       <view v-if="historyListRender.length" class="hot">
         <view class="title">
           <view>历史搜索</view>
           <view @tap="empty"><u-icon name="trash" size="40"></u-icon></view>
         </view>
         <view class="hot-list">
-          <view v-for="(item,i) in historyListRender" :key="i" class="item">
-            {{item.text}}
+          <view v-for="(item,i) in historyListRender" :key="i" class="item"  @tap="queryList(item)">
+            {{item}}
           </view>
         </view>
         <view @click="unfold=!unfold" class="unfold" :class="{active:unfold}" v-if="historyList.length>historyListRender.length || unfold">
@@ -33,14 +33,37 @@
       <view v-if="hotList.length" class="hot">
         <view class="title">热门搜索</view>
         <view class="hot-list">
-          <view v-for="(item,i) in hotList" :key="i" class="item">
+          <view v-for="(item,i) in hotList" :key="i" class="item" @tap="queryList(item.text)">
             {{item.text}}
           </view>
         </view>
       </view>
     </view>
     <!--关键词搜索列表-->
-    <view class="keyword-list">
+    <u-cell-group class="keyword-list" :border="false" v-else-if="fuzzyQueryList.length && !searchList.length">
+      <u-cell-item :title="item.text"  v-for="(item,i) in fuzzyQueryList" :key="i" :arrow="false" class="keyword-item" :border-bottom="false"  @tap="queryList(item.text)"></u-cell-item>
+    </u-cell-group>
+
+
+    <view v-else>
+      <view class="info-detail" v-for="(item,i) in searchList"  :key="i">
+        <view class="cover">
+          <u-image
+              :src="item.cover"
+              :lazy-load="true"
+              border-radius="6rpx"
+              mode="aspectFill"
+              height="200rpx"
+              width="100%">
+          </u-image>
+        </view>
+        <view class="main-info">
+          <view class="title">{{ item.title }}</view>
+          <view class="author">来自：{{ item.name||'-' }}</view>
+          <view class="updated">{{ item.updated||'-' }}</view>
+          <view class="state">{{ item.remark||'-' }}</view>
+        </view>
+      </view>
 
     </view>
 
@@ -54,8 +77,7 @@ import {fuzzySearchList} from '@/utils/classify.data'
 import {getParams} from '@/utils'
 import {mapGetters} from 'vuex'
 import {
-  crawl,
-  agentRequests
+  crawl
 } from "@/api/crawl";
 export default {
   name: "index",
@@ -66,8 +88,11 @@ export default {
       searchActiveType: '',//选中搜索类型
       showPicker: false,//显示搜索类型
       hotList:[],//热门推荐
-      historyList:uni.getStorageSync('search')||[],//历史列表
+      historyData:uni.getStorageSync('search')|| {},//历史列表
       unfold:false,
+      fuzzyQueryList:[],
+
+      searchList:[],
     }
   },
   onLoad(data) {
@@ -83,16 +108,18 @@ export default {
     },
     pickerConfirm(e) {
       const {value} = e[0] || {}
+      if(this.searchActiveType === value){
+        return
+      }
       this.searchActiveType = value
     },
     async getHostList() {
       try {
-        const {hotSearch, list=[],pageUrl,hotJsonSearch,pageJsonUrl} = this.activeSearchType
-        const url = hotJsonSearch?pageJsonUrl:pageUrl
+        const {hotSearch, list=[],pageUrl} = this.activeSearchType
         if (list.length) {
           this.hotList = list
         } else {
-          let {list} =  await crawl(url,hotSearch||hotJsonSearch)
+          let {list} =  await crawl(pageUrl,hotSearch)
           this.hotList = this.activeSearchType.list = list
         }
       } catch (e) {
@@ -100,20 +127,78 @@ export default {
       }
     },
     empty(){
-      this.historyList = []
-      uni.removeStorageSync('search')
+      this.historyData[this.searchActiveType]=[]
+      uni.setStorageSync('search', this.historyData)
     },
     async input(){
       try {
-        const {requestURL,pageJsonUrl} = this.activeSearchType
-        const params = {...requestURL}
-        params.url = params.url.replace('keyReg',this.value)
-        let {list} =  await crawl(pageJsonUrl,params)
-        console.log(this.value)
-
+        this.$u.debounce(this.fuzzySearch, 300)
       }catch (e){
         console.error(e)
       }
+    },
+    confirm(){
+      this.queryList(this.value)
+    },
+  async fuzzySearch(){
+    try {
+        const {requestURL,pageJsonUrl} = this.activeSearchType
+        const params = {...requestURL}
+        if(!this.value){
+          this.fuzzyQueryList= []
+          return
+        }
+        params.url = params.url.replace('keyReg',this.value)
+        let {list} =  await crawl(pageJsonUrl,params)
+        if(list){
+           this.fuzzyQueryList=list
+         }
+      }catch (e){
+        console.error(e)
+      }finally {
+       this.searchList=[]
+      }
+    },
+    async queryList(val=''){
+      val = val.replace(/(^\s*)|(\s*$)/g, "")
+      if(!val){
+        return
+      }
+      this.value = val
+      const type= this.searchActiveType //当前选择的类型
+      const historyData ={...this.historyData}
+      const historyList = this.historyList
+      //数据去重并插入
+      const index = historyList.indexOf(val)
+      index>=0&& historyList.splice(index,1)
+      historyList.unshift(val)
+      historyData[type] = historyList
+      this.historyData= historyData//更新数据
+      uni.setStorageSync('search',historyData)//历史列表存储
+      const classList = this.classifyArr.filter(v=>v.routeType === type && v.searchParams)
+       const classSearchList = (await Promise.all(classList.map(async v => {
+         try {
+           const params={...v.searchParams}
+           params.url =params.url.replace('keyReg', val)
+           const {list} = await crawl(v.requestPageUrl, params)
+           list.forEach(r => {
+             r.name = v.name
+             r.routeType = v.routeType
+             let num = [];
+             for (let y = 0; y <= val.length; y++) {
+               if (r.title.indexOf(val[y]) >= 0) {
+                 ++num
+               }
+             }
+             r.ratio = num / r.title.length
+           })
+           return list
+         } catch (e) {
+           return Promise.resolve([])
+         }
+       }))).flat()
+      classSearchList.sort((a,b)=>{return b.ratio-a.ratio});
+      this.searchList = classSearchList
     }
   },
   watch: {
@@ -128,6 +213,9 @@ export default {
     ...mapGetters({
       classifyArr: 'details/classifyArr',
     }),
+    historyList(){
+      return this.historyData[this.searchActiveType]||[]
+    },
     historyListRender(){
       return this.historyList.slice(0,this.unfold?this.historyList.length:5)
     },
@@ -168,6 +256,7 @@ export default {
     align-items: center;
   }
 }
+//推荐列表
 .record{
   padding-left:20rpx;
   font-size: 24rpx;
@@ -202,4 +291,45 @@ export default {
     }
   }
 }
+//模糊搜索列表
+.keyword-list{
+  /deep/ .u-cell{
+    padding: 12rpx 30rpx;
+    border-bottom:1px solid $uni-border-color;
+  }
+}
+
+//搜索列表
+.info-detail{
+  display: flex;
+  padding: 20rpx;
+  .cover{
+    margin-right:30rpx;
+    width:140rpx;
+    min-width:140rpx;
+  }
+
+  .main-info{
+    line-height:42rpx;
+    font-size:24rpx;
+    color: $uni-text-color-grey;
+    &>view{
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1;
+      overflow: hidden;
+    }
+  }
+  .title{
+    color: $uni-text-color;
+    font-weight:bold;
+    font-size:32rpx;
+    margin-bottom:28rpx;
+  }
+  .see-others{
+    margin-top:20rpx;
+    color: $uni-color-error;
+  }
+}
+
 </style>

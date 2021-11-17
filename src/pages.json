@@ -37,7 +37,7 @@
       "path": "pages/set/index"
     },
     {
-      "path": "pages/details/fiction/index"
+      "path": "pages/details/cartoon/index"
     },
     {
       "path": "pages/details/video/index"
@@ -46,7 +46,7 @@
       "path": "pages/details/video/webPage"
     },
     {
-      "path": "pages/details/fiction/preview",
+      "path": "pages/details/cartoon/preview",
       "style": {
         "navigationStyle": "custom"
       }

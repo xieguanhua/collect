@@ -79,7 +79,7 @@ export default {
     startRead(item){
       if(!item)return
       const {guid} = this.option
-      navigateTo('/pages/details/fiction/preview',{...item,guid})
+      navigateTo('/pages/details/cartoon/preview',{...item,guid})
     },
    async getDetail(){
       const {detailsParams,pageUrl,pageDetailsUrl} = this.activeTab
