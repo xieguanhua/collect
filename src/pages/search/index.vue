@@ -75,7 +75,7 @@
 
 <script>
 import navbar from '@/components/navbar'
-import {fuzzySearchList} from '@/utils/classify.data'
+import {fuzzySearchList,keyWordReg} from '@/utils/classify.data'
 import {getParams,navigateTo} from '@/utils'
 import noData from '@/components/no-data'
 import {mapGetters} from 'vuex'
@@ -165,8 +165,8 @@ export default {
         }
         if(this.isQueryRequest)return
         this.abort(this.fuzzyRequest)
-        params.url = params.url.replace('keyReg',this.value)
-        let {list} =  await crawl(pageJsonUrl,params,this.fuzzyRequest)
+        params.url = params.url.replace(keyWordReg,this.value)
+        let {list} = await crawl(pageJsonUrl,params,this.fuzzyRequest)
         if(list){
            this.fuzzyQueryList=list
          }
@@ -209,7 +209,7 @@ export default {
         const classSearchList = (await Promise.all(classList.map(async v => {
           try {
             const params={...v.searchParams}
-            params.url =params.url.replace('keyReg', val)
+            params.url =params.url.replace(keyWordReg, val)
             const {list} = await crawl(v.requestPageUrl, params)
             list.forEach(r => {
               r.name = v.name

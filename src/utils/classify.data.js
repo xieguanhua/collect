@@ -1,5 +1,7 @@
 import {guid} from '@/utils'
-const pageReg = `pageNumberReg`
+export const pageReg = `pageNumberReg`
+export const offsetReg =`offsetNumberReg`
+export const keyWordReg = `keyReg`
 export const host = 'http://192.168.3.32:3000'
 export const puppeteerApi = host +'/api/puppeteer/'
 export const jsonApi = host +'/api/json/'
@@ -15,7 +17,7 @@ const routes ={
         routeType: 'cartoon',
         requestURL:{
             requestPageUrl:jsonApi,
-            url:`https://m.ac.qq.com/search/smart?word=keyReg`,
+            url:`https://m.ac.qq.com/search/smart?word=${keyWordReg}`,
             list:{
                 parentCls:'data',
                 text:'title',
@@ -35,7 +37,7 @@ const routes ={
         requestURL:{
             requestPageUrl:jsonApi,
             jsonpName:'QZOutputJson',
-            url:`http://s.video.qq.com/smt_wap?ver=3&num=10&otype=json&query=keyReg`,
+            url:`http://s.video.qq.com/smt_wap?ver=3&num=10&otype=json&query=${keyWordReg}`,
             list:{
                 parentCls:'item',
                 text:'word',
@@ -96,7 +98,7 @@ const defaultList = [
             links:'.imgList .img【@attr@$@data-src@】'
         },
         searchParams:{
-            url:'https://www.kuaikanmanhua.com/sou/keyReg',
+            url:`https://www.kuaikanmanhua.com/sou/${keyWordReg}`,
             list:{
                 parentCls:'.resultList>.fl',
                 cover:'.imgBox .img【@attr@$@data-src@】',//使用jquery获取dom属性,attr,text等等
@@ -146,7 +148,7 @@ const defaultList = [
             links:'.comic-pic-item .comic-pic【@attr@$@data-src@】'
         },
         searchParams:{
-            url:'https://m.ac.qq.com/search/result?word=keyReg',
+            url:`https://m.ac.qq.com/search/result?word=${keyWordReg}`,
             list:{
                 parentCls:'.result-list .comic-item',
                 cover:'.cover-image【@src@】',
@@ -230,6 +232,79 @@ const defaultList = [
             list:`script:return (async function aa() {if (!$('.select-item').length) {return [];};function sleep(time= 3000) {return new Promise(resolve => {setTimeout(resolve, time);})};await sleep(8000);async function get() {await sleep();return $('.select-item').map((i, r) => {const v = $(r).find('.select-link');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text(), remark: v.attr('title')}})};let list =[];async function recursion(index =0){const dom = $('.bar-li,.popup-li');const d = dom.eq(index);if(d.length && !d.hasClass('more-li')){d.click();list =[...list,...(await get())];}dom.length>++index && await recursion(index);}await recursion();return list;})()`,
         },
         searchParams:{
+            url:`https://so.iqiyi.com/so/q_${keyWordReg}_ctg__t_0_page_1_p_1_qc_0_rd__site_iqiyi_m_1_bitrate__af_0`,
+            list:{
+                parentCls:'.vertical-pic',
+                cover:'.qy-mod-link img【@src@】',
+                title:'.main-tit【@innerText@】',
+                link: `script:return (data.find('.album-item a')[0] || data.find('.qy-mod-link')[0]||{}).href`,
+                updated:`script:return data.find('.qy-search-result-info').eq(5).text()`,
+                remark:`.multiple .info-des【@innerText@】`,
+            }
+        }
+    },
+    {
+        routeType: 'video',
+        name: '腾讯视频',
+        tags:[
+            {
+                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=tv&offset=0",
+                innerText: "电视剧"
+            },
+            {
+                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=movie&offset=0",
+                innerText: "电影"
+            },
+            {
+                href:  "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=variety&offset=0",
+                innerText: "综艺"
+            },
+            {
+                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=cartoon&offset=0",
+                innerText: "动漫"
+            },
+            {
+                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=child&offset=0",
+                innerText: "儿童"
+            },
+            {
+                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=doco&offset=0",
+                innerText: "纪录片"
+            },
+            {
+                href:"https://v.qq.com/x/bu/pagesheet/list?append=1&channel=knowledge&offset=0",
+                innerText: "知识"
+            },
+            {
+                href:"https://v.qq.com/x/bu/pagesheet/list?append=1&channel=sports_new&offset=0",
+                innerText: "体育"
+            }
+        ],
+        params: {
+            setCoding:true,
+            url:`https://v.qq.com/x/bu/pagesheet/list?append=1&channel=tv&offset=${offsetReg}`,
+            list:{
+                parentCls:'.list_item',
+                cover:'.figure_pic【@src@】',
+                title:'.figure_title【@innerText@】',
+                link:'.figure【@href@】',
+                remark:'.figure_desc【@innerText@】',
+            }
+        },
+        detailsParams:{
+        /*    clearCache:true,
+            url:``,
+            details:{
+            /!*    title:'._main_title【@innerText@】',
+                director:`.director【@innerText@】`,
+                // actor:`script:return ($('.intro-detail-item')[1]||{}).innerText`,
+                remark:`.video_summary .summary【@innerText@】`,*!/
+                updated:'.player_hint【@innerText@】'
+                // score:''
+            },*/
+            // list:`script:return (async function aa() {if (!$('.select-item').length) {return [];};function sleep(time= 3000) {return new Promise(resolve => {setTimeout(resolve, time);})};await sleep(8000);async function get() {await sleep();return $('.select-item').map((i, r) => {const v = $(r).find('.select-link');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text(), remark: v.attr('title')}})};let list =[];async function recursion(index =0){const dom = $('.bar-li,.popup-li');const d = dom.eq(index);if(d.length && !d.hasClass('more-li')){d.click();list =[...list,...(await get())];}dom.length>++index && await recursion(index);}await recursion();return list;})()`,
+        },
+        searchParams:{
             url:'https://so.iqiyi.com/so/q_keyReg_ctg__t_0_page_1_p_1_qc_0_rd__site_iqiyi_m_1_bitrate__af_0',
             list:{
                 parentCls:'.vertical-pic',
@@ -241,6 +316,7 @@ const defaultList = [
             }
         }
     },
+
     {
         routeType: 'music',
         name: '网易云'

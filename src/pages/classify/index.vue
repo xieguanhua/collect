@@ -71,6 +71,8 @@
   // #ifdef MP-WEIXIN || MP-BAIDU || MP-TOUTIAO || MP-QQ
   menuButtonInfo = uni.getMenuButtonBoundingClientRect();
   // #endif
+
+  import {offsetReg,pageReg} from '@/utils/classify.data'
 	export default {
 		data() {
 			return {
@@ -243,8 +245,17 @@
         if(href){
           const parse = urlFormat.parse(href||"")
          const hrefQuery= Qs.parse(parse.query)
-          parse.search= `?${Qs.stringify({...hrefQuery,...parseQuery})}`
+
+          const obj = {...parseQuery,...hrefQuery}
+          Object.keys(parseQuery).forEach(v=>{
+            const r = parseQuery[v]
+            if(r===offsetReg ||r === pageReg){
+              obj[v] = r
+            }
+          })
+          parse.search= `?${Qs.stringify(obj)}`
           url= urlFormat.format(parse)
+          console.log(url)
         }
         return {...params,url}
       },
