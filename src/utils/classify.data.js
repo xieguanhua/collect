@@ -148,7 +148,7 @@ const defaultList = [
         searchParams:{
             url:'https://m.ac.qq.com/search/result?word=keyReg',
             list:{
-                parentCls:'.comic-item',
+                parentCls:'.result-list .comic-item',
                 cover:'.cover-image【@src@】',
                 title:'.comic-title【@innerText@】',
                 link:'.comic-link【@href@】',

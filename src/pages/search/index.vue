@@ -15,7 +15,7 @@
     </navbar>
 
     <!--热门推荐与历史搜索-->
-    <view class="record" v-if="!fuzzyQueryList.length && !searchList.length">
+    <view class="record" v-if="!showFuzzy && !showSearch">
       <view v-if="historyListRender.length" class="hot">
         <view class="title">
           <view>历史搜索</view>
@@ -40,7 +40,7 @@
       </view>
     </view>
     <!--关键词搜索列表-->
-    <u-cell-group class="keyword-list" :border="false" v-else-if="fuzzyQueryList.length && !searchList.length">
+    <u-cell-group class="keyword-list" :border="false" v-else-if="showFuzzy && !showSearch">
       <u-cell-item :title="item.text"  v-for="(item,i) in fuzzyQueryList" :key="i" :arrow="false" class="keyword-item" :border-bottom="false"  @tap="queryList(item.text)"></u-cell-item>
     </u-cell-group>
 
@@ -64,7 +64,9 @@
           <view class="state">{{ item.remark||'-' }}</view>
         </view>
       </view>
-
+      <no-data v-if="!searchList.length && !isQueryRequest">
+        <view>没有找到 <text class="keyword">“{{value}}“</text> 相关数据</view>
+      </no-data>
     </view>
 
     <u-select v-model="showPicker" :list="fuzzySearchList" value-name="routeType" label-name="type" @confirm="pickerConfirm" :default-value="[searchActive]"></u-select>
@@ -75,6 +77,7 @@
 import navbar from '@/components/navbar'
 import {fuzzySearchList} from '@/utils/classify.data'
 import {getParams,navigateTo} from '@/utils'
+import noData from '@/components/no-data'
 import {mapGetters} from 'vuex'
 import {
   crawl
@@ -93,6 +96,8 @@ export default {
       historyData:uni.getStorageSync('search')|| {},//历史列表
       unfold:false,
       fuzzyQueryList:[],
+      showSearch:false,
+      showFuzzy:false,
       searchList:[],
     }
   },
@@ -101,7 +106,8 @@ export default {
     this.searchActiveType = option.routeType
   },
   components: {
-    navbar
+    navbar,
+    noData
   },
   methods: {
     toDetails(data){
@@ -138,6 +144,8 @@ export default {
     },
     async input(){
       try {
+        this.showFuzzy =true
+        if(!this.isQueryRequest){this.showSearch = false}
         this.$u.debounce(this.fuzzySearch, 300)
       }catch (e){
         console.error(e)
@@ -151,6 +159,7 @@ export default {
         const {requestURL,pageJsonUrl} = this.activeSearchType
         const params = {...requestURL}
         if(!this.value){
+          this.showFuzzy =false
           this.fuzzyQueryList= []
           return
         }
@@ -161,10 +170,11 @@ export default {
         if(list){
            this.fuzzyQueryList=list
          }
-      }catch (e){
+       this.showFuzzy =!!this.fuzzyQueryList.length
+    }catch (e){
         console.error(e)
       }finally {
-       this.searchList=[]
+      this.searchList=[]
       }
     },
     abort({request}={}){
@@ -181,6 +191,7 @@ export default {
           });
           return
         }
+        this.showSearch = true
         this.isQueryRequest =true
         this.abort(this.fuzzyRequest)
         this.value = val
@@ -366,6 +377,9 @@ export default {
     margin-top:20rpx;
     color: $uni-color-error;
   }
+}
+.keyword{
+  color: $uni-color-primary;
 }
 
 </style>
