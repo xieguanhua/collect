@@ -229,7 +229,7 @@ const defaultList = [
                 updated:'.update-tip【@innerText@】'
                 // score:''
             },
-            list:`script:return (async function aa() {if (!$('.select-item').length) {return [];};function sleep(time= 3000) {return new Promise(resolve => {setTimeout(resolve, time);})};await sleep(8000);async function get() {await sleep();return $('.select-item').map((i, r) => {const v = $(r).find('.select-link');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text(), remark: v.attr('title')}})};let list =[];async function recursion(index =0){const dom = $('.bar-li,.popup-li');const d = dom.eq(index);if(d.length && !d.hasClass('more-li')){d.click();list =[...list,...(await get())];}dom.length>++index && await recursion(index);}await recursion();return list;})()`,
+            list:`script:return (async function aa() {if (!$('.select-item').length) {return [];};await sleep(8000);async function get() {await sleep();return $('.select-item').map((i, r) => {const v = $(r).find('.select-link');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text(), remark: v.attr('title')}})};let list =[];async function recursion(index =0){const dom = $('.bar-li,.popup-li');const d = dom.eq(index);if(d.length && !d.hasClass('more-li')){d.click();list =[...list,...(await get())];}dom.length>++index && await recursion(index);}await recursion();return list;})()`,
         },
         searchParams:{
             url:`https://so.iqiyi.com/so/q_${keyWordReg}_ctg__t_0_page_1_p_1_qc_0_rd__site_iqiyi_m_1_bitrate__af_0`,
@@ -292,28 +292,13 @@ const defaultList = [
             }
         },
         detailsParams:{
-        /*    clearCache:true,
             url:``,
-            details:{
-            /!*    title:'._main_title【@innerText@】',
-                director:`.director【@innerText@】`,
-                // actor:`script:return ($('.intro-detail-item')[1]||{}).innerText`,
-                remark:`.video_summary .summary【@innerText@】`,*!/
-                updated:'.player_hint【@innerText@】'
-                // score:''
-            },*/
-            // list:`script:return (async function aa() {if (!$('.select-item').length) {return [];};function sleep(time= 3000) {return new Promise(resolve => {setTimeout(resolve, time);})};await sleep(8000);async function get() {await sleep();return $('.select-item').map((i, r) => {const v = $(r).find('.select-link');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text(), remark: v.attr('title')}})};let list =[];async function recursion(index =0){const dom = $('.bar-li,.popup-li');const d = dom.eq(index);if(d.length && !d.hasClass('more-li')){d.click();list =[...list,...(await get())];}dom.length>++index && await recursion(index);}await recursion();return list;})()`,
+            details:`script:return (async () => {await sleep(8000);return {title: $('.video_title ._main_title').text(), actor: $('.director').text(), remark: $('.video_summary .summary').text(), updated: $('.player_hint').text(), score: $('.video_score').text()}})()`,
+            list:`script:return (async () => {await sleep(8000);if (!$('.mod_episode .item').length) {return [];};async function get() {await sleep();return $('.mod_episode .item').map((i, r) => {const v = $(r).find('a');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text()}}).toArray()};let list = [];async function recursion(index = 0) {const dom = $('.episode_filter_items .item');const d = dom.eq(index);if (d.length) {d.click();list = [...list, ...(await get())];} else if (index === 0) {list =await get()}dom.length > ++index && await recursion(index);}await recursion();return list;})()`
         },
         searchParams:{
-            url:'https://so.iqiyi.com/so/q_keyReg_ctg__t_0_page_1_p_1_qc_0_rd__site_iqiyi_m_1_bitrate__af_0',
-            list:{
-                parentCls:'.vertical-pic',
-                cover:'.qy-mod-link img【@src@】',
-                title:'.main-tit【@innerText@】',
-                link: `script:return (data.find('.album-item a')[0] || data.find('.qy-mod-link')[0]||{}).href`,
-                updated:`script:return data.find('.qy-search-result-info').eq(5).text()`,
-                remark:`.multiple .info-des【@innerText@】`,
-            }
+            url:'https://v.qq.com/x/search/?q=keyReg',
+            list:`script:return (() => {return  $('.result_item_v').map((i,v) => ({cover: $(v).find('.figure_pic')[0].src, title: $(v).find('.result_title').text(),link: $(v).find('.figure')[0].href, remark: $(v).find('.desc_text').text(),})).toArray().filter(v=>v.link.indexOf('search_redirect.html')<0)})()`
         }
     },
 

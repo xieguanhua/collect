@@ -1,8 +1,8 @@
 <template>
   <view class="analysis-video" :style="cssTheme">
     <view class="video" :style="videoStyle">
-      <video :src="playUrl"  class="video-main" v-if="playUrl" autoplay @timeupdate="timeupdate" :play-strategy="3" @ended="ended"></video>
-      <web-view :src="playIframeUrl" :style="videoStyle"  v-else></web-view>
+<!--      <video :src="playUrl"  class="video-main" v-if="playUrl" autoplay @timeupdate="timeupdate" :play-strategy="3" @ended="ended"></video>
+      <web-view :src="playIframeUrl" :style="videoStyle"  v-else></web-view>-->
     </view>
 
  <view class="info">
