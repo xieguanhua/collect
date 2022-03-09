@@ -1,326 +1,44 @@
-import {guid} from '@/utils'
-export const pageReg = `pageNumberReg`
-export const offsetReg =`offsetNumberReg`
-export const keyWordReg = `keyReg`
-export const host = 'http://192.168.3.32:3000'
-export const puppeteerApi = host +'/api/puppeteer/'
-export const jsonApi = host +'/api/json/'
-const routes ={
-    all:'全部',
-    music: '音乐',
-    video:'视频',
-    fiction:'小说',
-    cartoon:'漫画'
+const modulesConfig = {
+    music: [
+        {
+            name: 'qq音乐',
+            icon: 'data:image/png;base64,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',
+            home: {
+                request: {
+                    url: 'https://u.y.qq.com/cgi-bin/musicu.fcg',
+                    params: {
+                        data: {
+                            detail: {
+                                module: "musicToplist.ToplistInfoServer",
+                                method: "GetDetail",
+                                param: {
+                                    topId: 26,
+                                    offset: 0,
+                                    num: 100,
+                                },
+                            }
+                        },
+                    }
+                },
+                data: [],//数据格式
+                script: ''
+            }
+        },
+        {
+            name: '网易云音乐',
+            icon: 'data:image/png;base64,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',
+            home: {
+                request: {
+                    url: 'https://music.163.com/api/v6/playlist/detail',
+                    params: {
+                        id: 3778678
+                    }
+                },
+                script: ''
+            }
+        }
+    ]
 }
- const fuzzySearchList =[
-    {
-        routeType: 'cartoon',
-        requestURL:{
-            requestPageUrl:jsonApi,
-            url:`https://m.ac.qq.com/search/smart?word=${keyWordReg}`,
-            list:{
-                parentCls:'data',
-                text:'title',
-            }
-        },
-        hotSearch: {
-            url:`https://m.ac.qq.com/search/index`,
-            list:{
-                parentCls:'.search-hot-list .item',
-                text:'.link【@innerText@】'
-            }
-
-        }
-    },
-    {
-        routeType: 'video',
-        requestURL:{
-            requestPageUrl:jsonApi,
-            jsonpName:'QZOutputJson',
-            url:`http://s.video.qq.com/smt_wap?ver=3&num=10&otype=json&query=${keyWordReg}`,
-            list:{
-                parentCls:'item',
-                text:'word',
-            }
-        },
-        hotSearch: {
-            requestPageUrl:jsonApi,
-            url:`https://node.video.qq.com/x/api/hot_mobilesearch?channdlId=0&_=1636430562511`,
-            list:{
-                parentCls:'data.itemList',
-                text:'title'
-            }
-
-        }
-    }
-]
-fuzzySearchList.forEach(v=>{
-    v.type = routes[v.routeType]
-})
-export {fuzzySearchList}
-const defaultList = [
-    {
-        routeType: 'cartoon',
-        name: '快看漫画',
-        params: {
-            url:`https://www.kuaikanmanhua.com/tag/0?page=${pageReg}`,
-            list:{
-                parentCls:'.ItemSpecial',
-                cover:'.imgCover .img【@attr@$@data-src@】',//使用jquery获取dom属性,attr,text等等
-                title:'.itemTitle【@innerText@】',
-                link:'.itemLink【@href@】',
-                remark:'.itemFooter .author【@innerText@】',
-              /*  data:{
-                    link:'.itemLink【@href@】',
-                }*/
-            }
-        },
-        classIfy:{
-            url:`https://www.kuaikanmanhua.com/tag/0`,
-            tags:'.theme .selList .selListItem【@href|innerText@】',
-        },
-        detailsParams:{
-            url:``,
-            details:{
-                title:'.TopicHeader .title【@innerText@】',
-                author:'.TopicHeader .nickname【@innerText@】',
-                explain:'.TopicHeader .detailsBox【@innerText@】',
-            },
-            list:{
-                parentCls:'.TopicItem',
-                title:'.title【@innerText@】',
-                link:'.title a【@href@】',
-                filter:'attr(href)@=@javascript:void(0)'//只执行jquery
-            }
-        },
-        previewParams:{
-            url:``,
-            links:'.imgList .img【@attr@$@data-src@】'
-        },
-        searchParams:{
-            url:`https://www.kuaikanmanhua.com/sou/${keyWordReg}`,
-            list:{
-                parentCls:'.resultList>.fl',
-                cover:'.imgBox .img【@attr@$@data-src@】',//使用jquery获取dom属性,attr,text等等
-                title:'.itemTitle【@innerText@】',
-                link:'.link【@href@】',
-                remark:'.author【@innerText@】',
-            }
-        }
-    },
-    {
-        routeType: 'cartoon',
-        name: '腾讯漫画',
-        params: {
-            url:`https://m.ac.qq.com/category/listAll/type/na/rank/pgv?page=${pageReg}&pageSize=15`,
-            list:{
-                parentCls:'.comic-item',
-                cover:'.cover-image【@src@】',
-                title:'.comic-title【@innerText@】',
-                link:'.comic-link【@href@】',
-                remark:'.comic-desc【@innerText@】',
-            }
-        },
-        classIfy:{
-            url:`https://m.ac.qq.com/category/index`,
-            tags:{
-                parentCls:'.category-normal-item',
-                href:'.item-link【@href@】',
-                innerText:'.item-link【@innerText@】'
-            }
-        },
-        detailsParams:{
-            url:``,
-            details:{
-                title:'.head-title-tags h1【@innerText@】',
-                author:'.intro-detail-item【@innerText@】',
-                explain:'.head-info-desc【@innerText@】',
-            },
-            list:{
-                parentCls:'.chapter-wrap-list.normal .bottom-chapter-item',
-                title:'.comic-info【@innerText@】',
-                link:'.chapter-link【@href@】',
-                filter:'find(.comic-cover)@$@is(.lock)@=@true'
-            }
-        },
-        previewParams:{
-            url:``,
-            links:'.comic-pic-item .comic-pic【@attr@$@data-src@】'
-        },
-        searchParams:{
-            url:`https://m.ac.qq.com/search/result?word=${keyWordReg}`,
-            list:{
-                parentCls:'.result-list .comic-item',
-                cover:'.cover-image【@src@】',
-                title:'.comic-title【@innerText@】',
-                link:'.comic-link【@href@】',
-                remark:'.comic-desc【@innerText@】',
-                updated:'.comic-update【@innerText@】',
-            }
-        }
-    },
-    {
-        routeType: 'video',
-        name: '爱奇艺',
-        tags:[
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=-1&date=&pg_num=1",
-                innerText: "总榜"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=2&date=&pg_num=1",
-                innerText: "电视剧"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=1&date=&pg_num=1",
-                innerText: "电影"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=6&date=&pg_num=1",
-                innerText: "综艺"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=4&date=&pg_num=1",
-                innerText: "动漫"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=15&date=&pg_num=1",
-                innerText: "儿童"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=3&date=&pg_num=1",
-                innerText: "纪录片"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=-7&date=&pg_num=1",
-                innerText: "说唱"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=12&date=&pg_num=1",
-                innerText: "教育"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=912&date=&pg_num=1",
-                innerText: "知识"
-            },
-            {
-                href: "https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&category_id=17&date=&pg_num=1",
-                innerText: "体育"
-            }
-        ],
-        params: {
-            requestPageUrl: jsonApi,
-            url:`https://pcw-api.iqiyi.com/strategy/pcw/data/topRanksData?page_st=0&tag=0&date=&pg_num=${pageReg}`,
-            list:{
-                parentCls:'data.formatData.data.content',
-                cover:'img',
-                title:'title',
-                link:'pageUrl',
-                remark:'desc',
-            }
-        },
-        detailsParams:{
-            url:``,
-            details:{
-                title:'.head-title .header-txt【@innerText@】',
-                director:`script:return ($('.intro-detail-item')[0]||{}).innerText`,
-                actor:`script:return ($('.intro-detail-item')[1]||{}).innerText`,
-                remark:`script:return ($('.intro-detail-item')[2]||{}).innerText`,
-                updated:'.update-tip【@innerText@】'
-                // score:''
-            },
-            list:`script:return (async function aa() {if (!$('.select-item').length) {return [];};await sleep();async function get() {await sleep();return $('.select-item').map((i, r) => {const v = $(r).find('.select-link');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text(), remark: v.attr('title')}})};let list =[];async function recursion(index =0){const dom = $('.bar-li,.popup-li');const d = dom.eq(index);if(d.length && !d.hasClass('more-li')){d.click();list =[...list,...(await get())];}dom.length>++index && await recursion(index);}await recursion();return list;})()`,
-        },
-        searchParams:{
-            url:`https://so.iqiyi.com/so/q_${keyWordReg}_ctg__t_0_page_1_p_1_qc_0_rd__site_iqiyi_m_1_bitrate__af_0`,
-            list:{
-                parentCls:'.vertical-pic',
-                cover:'.qy-mod-link img【@src@】',
-                title:'.main-tit【@innerText@】',
-                link: `script:return (data.find('.album-item a')[0] || data.find('.qy-mod-link')[0]||{}).href`,
-                updated:`script:return data.find('.qy-search-result-info').eq(5).text()`,
-                remark:`.multiple .info-des【@innerText@】`,
-            }
-        }
-    },
-    {
-        routeType: 'video',
-        name: '腾讯视频',
-        tags:[
-            {
-                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=tv&offset=0",
-                innerText: "电视剧"
-            },
-            {
-                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=movie&offset=0",
-                innerText: "电影"
-            },
-            {
-                href:  "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=variety&offset=0",
-                innerText: "综艺"
-            },
-            {
-                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=cartoon&offset=0",
-                innerText: "动漫"
-            },
-            {
-                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=child&offset=0",
-                innerText: "儿童"
-            },
-            {
-                href: "https://v.qq.com/x/bu/pagesheet/list?append=1&channel=doco&offset=0",
-                innerText: "纪录片"
-            },
-            {
-                href:"https://v.qq.com/x/bu/pagesheet/list?append=1&channel=knowledge&offset=0",
-                innerText: "知识"
-            },
-            {
-                href:"https://v.qq.com/x/bu/pagesheet/list?append=1&channel=sports_new&offset=0",
-                innerText: "体育"
-            }
-        ],
-        params: {
-            setCoding:true,
-            url:`https://v.qq.com/x/bu/pagesheet/list?append=1&channel=tv&offset=${offsetReg}`,
-            list:{
-                parentCls:'.list_item',
-                cover:'.figure_pic【@src@】',
-                title:'.figure_title【@innerText@】',
-                link:'.figure【@href@】',
-                remark:'.figure_desc【@innerText@】',
-            }
-        },
-        detailsParams:{
-            url:``,
-            allowLoad:['image'],
-            details:`script:return (async () => {await sleep();return {title: $('.video_title ._main_title').text(), actor: $('.director').text(), remark: $('.video_summary .summary').text(), updated: $('.player_hint').text(), score: $('.video_score').text()}})()`,
-            list:`script:return (async () => {await sleep();if (!$('.mod_episode .item').length) {return [];};async function get() {await sleep();return $('.mod_episode .item').map((i, r) => {const v = $(r).find('a');return {link: v[0].href, mark: ($(r).find('img')[0] || {}).src, title: v.text()}}).toArray()};let list = [];async function recursion(index = 0) {const dom = $('.episode_filter_items .item');const d = dom.eq(index);if (d.length) {d.click();list = [...list, ...(await get())];} else if (index === 0) {list =await get()}dom.length > ++index && await recursion(index);}await recursion();return list;})()`
-        },
-        searchParams:{
-            allowLoad:['image'],
-            url:'https://v.qq.com/x/search/?q=keyReg',
-            list:`script:return (() => {return  $('.result_item_v').map((i,v) => ({cover: $(v).find('.figure_pic')[0].src, title: $(v).find('.result_title').text(),link: $(v).find('.figure')[0].href, remark: $(v).find('.desc_text').text(),})).toArray().filter(v=>v.link.indexOf('search_redirect.html')<0)})()`
-        }
-    }
-]
 
 
-//读取本地配置与默认配置合并去重，默认配置优先
-const storageList =uni.getStorageSync('config')||[]
-let list = [...defaultList,...storageList]
-const hash = {};
-const newList = list.reduce((item, next)=>{
-    next.type= routes[next.routeType]
-    if(!next.guid){
-       const {guid:guidText} = storageList.find(({name,routeType})=>name === next.name && routeType === next.routeType)||{}
-      next.guid = guidText ||guid()
-   }
-    hash[next.name] ? '' : hash[next.name] = true && item.push(next);
-    return item;
-},[])
-uni.setStorageSync('config',newList)
-
-
-
-export default newList
+export const config = modulesConfig
